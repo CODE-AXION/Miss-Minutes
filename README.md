@@ -1,5 +1,7 @@
 # Miss Minutes
 
+<p align="center"><img src="docs/images/miss-minutes-hello.gif" alt="Miss Minutes waving" width="200"></p>
+
 Miss Minutes turns your meeting recordings into searchable meeting notes, automatically.
 
 It watches the folder your recordings are saved to (for example OBS's `Videos` folder). Each new recording is compressed, uploaded to Google AI Studio and turned into a Markdown note with an overview, topics, decisions, action items and diagrams. The note is then filed in your library by category and tags. Everything runs on your own PC, in the background, from the system tray.

@@ -10,11 +10,14 @@ export function PosterPanel({
   pose = 'wave',
   heading = 'Public information',
   className,
+  art,
   children
 }: {
   pose?: MascotPose
   heading?: string
   className?: string
+  /** Replaces the drawn mascot (e.g. an AnimatedMascot). */
+  art?: ReactNode
   children: ReactNode
 }): JSX.Element {
   return (
@@ -28,7 +31,7 @@ export function PosterPanel({
         <span className="wordmark rounded-sm bg-card px-1.5 text-xs">{heading}</span>
       </header>
       <div className="flex items-center gap-4 p-4">
-        <Mascot pose={pose} size={84} className="shrink-0" />
+        {art ?? <Mascot pose={pose} size={84} className="shrink-0" />}
         <p className="text-base">{children}</p>
       </div>
     </section>

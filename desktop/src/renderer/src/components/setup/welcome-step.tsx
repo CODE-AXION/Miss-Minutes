@@ -3,6 +3,7 @@ import { FolderOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import type { EngineMode } from '@shared/api'
 import { voice } from '@shared/voice'
+import { AnimatedMascot } from '@/components/brand/animated-mascot'
 import { PosterPanel } from '@/components/brand/poster-panel'
 import type { StepProps } from '@/components/setup/types'
 import { Button } from '@/components/ui/button'
@@ -29,7 +30,9 @@ export function WelcomeStep({ state }: StepProps): JSX.Element {
 
   return (
     <div className="flex flex-col gap-5">
-      <PosterPanel heading="Welcome">{voice('setup.welcome', settings.voice)}</PosterPanel>
+      <PosterPanel heading="Welcome" art={<AnimatedMascot kind="hello" size={120} />}>
+        {voice('setup.welcome', settings.voice)}
+      </PosterPanel>
       <p>
         Miss Minutes watches the folder your meeting recordings are saved to, and turns each new
         recording into meeting notes with Google AI Studio. Everything runs on this computer, in the

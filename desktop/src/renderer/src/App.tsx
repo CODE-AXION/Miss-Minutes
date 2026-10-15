@@ -1,5 +1,6 @@
 import { useEffect, type JSX } from 'react'
 import { RouterProvider } from 'react-router'
+import { StartupSplash } from '@/components/brand/startup-splash'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { router } from '@/routes'
@@ -13,6 +14,7 @@ function App(): JSX.Element {
     <TooltipProvider delayDuration={300}>
       <RouterProvider router={router} />
       <Toaster position="bottom-right" richColors closeButton />
+      <StartupSplash />
     </TooltipProvider>
   )
 }

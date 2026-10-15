@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { CrtPanel, Readout } from '@/components/brand/crt-panel'
+import { AnimatedMascot } from '@/components/brand/animated-mascot'
 import { Mascot, type MascotPose } from '@/components/brand/mascot'
 import { StatusBadge } from '@/components/status-badge'
 import { UploadDropzone } from '@/components/upload-dropzone'
@@ -25,6 +26,7 @@ import {
 } from '@/lib/format'
 import { lastStage, PHASES, phaseStates, stageInfo } from '@/lib/stages'
 import { videoPath } from '@/lib/paths'
+import { useSplashDone } from '@/lib/splash'
 import { isFinalFailure, maxAttempts, useApp, useNow } from '@/store'
 
 function StepRow({ entry }: { entry: VideoEntry }): JSX.Element {
@@ -68,6 +70,7 @@ function NowProcessing({ state }: { state: AppState }): JSX.Element {
   const key = worker.current
   const entry = key ? state.videos[key] : undefined
   const voiceOn = settings.voice
+  const splashDone = useSplashDone()
 
   if (!key || !entry || worker.state !== 'busy') {
     const down = worker.connection !== 'up'
@@ -76,7 +79,15 @@ function NowProcessing({ state }: { state: AppState }): JSX.Element {
     return (
       <CrtPanel>
         <CardContent className="flex items-center gap-6 py-2">
-          <Mascot pose={pose} size={96} className="shrink-0" />
+          {pose === 'wave' ? (
+            splashDone ? (
+              <AnimatedMascot kind="hello" size={110} then={<Mascot pose="wave" size={96} />} />
+            ) : (
+              <div className="shrink-0" style={{ width: 110, height: 110 }} />
+            )
+          ) : (
+            <Mascot pose={pose} size={96} className="shrink-0" />
+          )}
           <div className="flex min-w-0 flex-col gap-1">
             <CardTitle className="font-display text-xl">
               {down ? 'Worker not running' : worker.paused ? 'Paused' : 'Nothing processing'}
