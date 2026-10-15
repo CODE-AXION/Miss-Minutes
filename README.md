@@ -48,12 +48,12 @@ If something fails, Miss Minutes retries on its own, up to 3 attempts per record
 
 | File | What it is |
 |---|---|
-| [`desktop/dist/Miss Minutes Setup 1.0.0.exe`](desktop/dist/Miss%20Minutes%20Setup%201.0.0.exe) | **The installer.** Run this to install or update Miss Minutes. |
+| [**Download `Miss-Minutes-Setup-1.0.0.exe`**](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.0.0.exe) | **The installer.** Run this to install or update Miss Minutes. All versions are on the [Releases](https://github.com/CODE-AXION/Miss-Minutes/releases) page. |
 | `%LOCALAPPDATA%\Programs\Miss Minutes\Miss Minutes.exe` | The installed app (Start menu → **Miss Minutes**). |
 | `%LOCALAPPDATA%\Programs\Miss Minutes\Uninstall Miss Minutes.exe` | **The uninstaller** (Start menu → **Uninstall Miss Minutes**). See [Uninstall](#uninstall). |
-| [`desktop/dist/win-unpacked/`](desktop/dist/win-unpacked) | The same app, unpacked, without installing (for testing). |
+| `desktop/dist/win-unpacked/` | The same app, unpacked, without installing (for testing). Local build output only. |
 
-> The `desktop/dist` files are build output. If they are missing, build them with `npm run dist` (see [For developers](#for-developers)).
+> The installer is not stored in the repository (it is too large for git). It is attached to each [GitHub Release](https://github.com/CODE-AXION/Miss-Minutes/releases). To build it yourself, run `npm run dist` (see [For developers](#for-developers)); it lands in `desktop/dist/`.
 
 ---
 
