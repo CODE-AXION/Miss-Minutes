@@ -69,7 +69,7 @@ You do **not** need Python, HandBrake or anything else: the installer includes t
 
 ## Install and first-run setup
 
-1. Run **`Miss Minutes Setup 1.0.0.exe`**. It installs for your user only, with no admin rights needed. You can choose the folder.
+1. Run **`Miss-Minutes-Setup-1.0.0.exe`** ([download](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.0.0.exe)). It installs for your user only, with no admin rights needed. You can choose the folder.
 2. Miss Minutes starts and opens a short setup wizard.
 
 | | |
@@ -252,7 +252,7 @@ This is `%APPDATA%\Miss Minutes`: settings, the automation browser profile and a
 **A fresh retest, step by step:**
 1. Quit Miss Minutes from the tray.
 2. Start menu → **Uninstall Miss Minutes**. Answer **No** to the library and **Yes** to settings.
-3. Run `Miss Minutes Setup 1.0.0.exe` again. The wizard starts from scratch and offers your existing library.
+3. Run `Miss-Minutes-Setup-1.0.0.exe` again. The wizard starts from scratch and offers your existing library.
 
 **Silent uninstall** (scripts): `"%LOCALAPPDATA%\Programs\Miss Minutes\Uninstall Miss Minutes.exe" /S` asks nothing and keeps all data.
 
