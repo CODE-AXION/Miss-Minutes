@@ -1,0 +1,10 @@
+out
+dist
+pnpm-lock.yaml
+LICENSE.md
+tsconfig.json
+tsconfig.*.json
+# shadcn/ui generated code
+src/renderer/src/components/ui
+src/renderer/src/hooks
+components.json

@@ -1,0 +1,127 @@
+/*
+ * Note typography for the notes viewer (07·T3): plain and readable, no scanlines or glow (04a risks).
+ * Colours come from the theme tokens only, so both the office and the CRT theme work.
+ */
+.note-markdown {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--card-foreground);
+  overflow-wrap: anywhere;
+
+  & > :first-child {
+    margin-top: 0;
+  }
+  & h2 {
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.25rem;
+    font-weight: 600;
+    scroll-margin-top: 1rem;
+  }
+  & h3 {
+    margin: 1.5rem 0 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  & h4 {
+    margin: 1.25rem 0 0.5rem;
+    font-weight: 600;
+  }
+  & p {
+    margin: 0.6rem 0;
+  }
+  & ul,
+  & ol {
+    margin: 0.6rem 0;
+    padding-left: 1.5rem;
+  }
+  & ul {
+    list-style: disc;
+  }
+  & ol {
+    list-style: decimal;
+  }
+  & li {
+    margin: 0.25rem 0;
+  }
+  & li > ul,
+  & li > ol {
+    margin: 0.25rem 0;
+  }
+  & strong {
+    font-weight: 600;
+  }
+  & a {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  & blockquote {
+    margin: 0.75rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--border);
+    color: var(--muted-foreground);
+  }
+  & hr {
+    margin: 1.5rem 0;
+    border-color: var(--border);
+  }
+  & code {
+    padding: 0.1rem 0.3rem;
+    border-radius: var(--radius-sm);
+    background: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+  & pre {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--muted);
+    & code {
+      padding: 0;
+      background: none;
+    }
+  }
+  & .note-table {
+    margin: 0.75rem 0;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  & table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  & th,
+  & td {
+    padding: 0.45rem 0.65rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  & th {
+    background: var(--muted);
+    font-weight: 600;
+  }
+  & tr:last-child td {
+    border-bottom: 0;
+  }
+  & tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--muted) 40%, transparent);
+  }
+  /* [MM:SS] timestamps */
+  & mark.note-ts {
+    padding: 0 0.2rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+    color: inherit;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+}

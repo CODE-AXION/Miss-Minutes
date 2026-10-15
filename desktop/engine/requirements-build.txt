@@ -1,0 +1,4 @@
+# Build venv for the frozen engine (11b). Lives in desktop/engine/.venv, never the project .venv.
+# Keep playwright equal to the project .venv so dev mode and the bundled engine behave the same.
+playwright==1.63.0
+pyinstaller==6.22.3

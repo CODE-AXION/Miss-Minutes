@@ -1,0 +1,265 @@
+/**
+ * The contract between the renderer and main: the `window.api` surface exposed by the preload, the
+ * app state main broadcasts, and the IPC channel names. Worker shapes come from ./protocol only.
+ */
+import type {
+  Ack,
+  CheckResult,
+  CommandInput,
+  HelloEvent,
+  ProgressEvent,
+  SettlingEvent,
+  SigninEvent,
+  VideoEntry,
+  WorkerStateName
+} from './protocol'
+
+// --- Settings (electron-store; defaults mirror argparse, see 05·T1) ------------------------
+
+export type ThinkingLevel = 'low' | 'medium' | 'high'
+/** office = light TVA theme, crt = dark terminal theme, system = follow Windows. */
+export type ThemeSetting = 'system' | 'office' | 'crt'
+/** bundled = resources\engine\mm-engine.exe (installed app); project = .venv python + watcher.py (developer). */
+export type EngineMode = 'bundled' | 'project'
+/** hidden = the automation Chrome runs on a hidden Windows desktop while processing; visible = shown, for troubleshooting. */
+export type ChromeMode = 'hidden' | 'visible'
+
+export interface Settings {
+  engine: EngineMode
+  /** Developer mode (engine: project) only. */
+  projectRoot: string
+  /** Chrome profile of the automation Chrome; bundled mode only (project mode uses .chrome-automation). */
+  profileDir: string
+  chromeMode: ChromeMode
+  library: string
+  watchDir: string
+  interval: number
+  settle: number
+  maxAttempts: number
+  handbrake: string
+  hbPreset: string
+  hbQuality: number
+  hbEncoder: string
+  model: string
+  fallbackModel: string
+  thinkingLevel: ThinkingLevel
+  language: string
+  context: string
+  retries: number
+  timeout: number
+  uploadTimeout: number
+  loginWait: number
+  port: number
+  keepBrowser: boolean
+  // app-only
+  openAtLogin: boolean
+  startHidden: boolean
+  /** The Google sign-in toast has no switch: it always shows (it is the only state that waits for the user). */
+  notify: { done: boolean; failedFinal: boolean; everyFailure: boolean }
+  theme: ThemeSetting
+  voice: boolean
+}
+
+/** after-current = restart the worker once the current video is finished; now = kill and requeue it. */
+export type RestartMode = 'after-current' | 'now'
+
+// --- App state (main is authoritative; broadcast to renderers) ------------------------------
+
+export type Connection = 'up' | 'starting' | 'reconnecting' | 'crashed' | 'locked'
+
+export interface WorkerStatus {
+  /** null while no worker is connected. */
+  state: WorkerStateName | null
+  paused: boolean
+  /** "signin": the worker paused itself because the hidden Chrome lost the Google session (11f·T2). */
+  pauseReason: 'signin' | null
+  current: string | null
+  queue: string[]
+  pid: number | null
+  connection: Connection
+  /** Why the worker is crashed/locked, plus the last stderr lines for "crashed". */
+  problem?: { message: string; lastLines?: string[] }
+}
+
+export interface LiveState {
+  progress: Record<string, Omit<ProgressEvent, 'type' | 'key'>>
+  settling: Record<string, Omit<SettlingEvent, 'type' | 'key'>>
+}
+
+export interface AppState {
+  worker: WorkerStatus
+  videos: Record<string, VideoEntry>
+  hello: HelloEvent | null
+  live: LiveState
+  settings: Settings
+  /** Why the engine can't be started (bundled exe, or project python / watcher.py missing), or null. */
+  engineProblem: string | null
+  /** The first-run wizard shows (and the worker stays stopped) while true: setup not finished, or engineProblem. */
+  setupNeeded: boolean
+  google: GoogleState
+  /** A sign-in/sign-out Chrome window is open (setup:signin or account:*). */
+  signinRunning: boolean
+  /** Latest `login_required` stage still unresolved (cleared by the next stage of that video). */
+  lastLoginRequired: { key: string; at: string; wait_s: number; hidden: boolean } | null
+}
+
+/** From the last `signin` run (persisted) plus what the worker reported since. */
+export interface GoogleState {
+  /** Set by signin_ok (email null when it could not be read), cleared by signout_ok. */
+  account: { email: string | null; checkedAt: string } | null
+  /** The worker hit a Google sign-in page (login_required) and no sign-in or chat has happened since. */
+  needsSignin: boolean
+}
+
+/** A library folder the wizard can use as is (it has an index.json). */
+export interface LibraryInfo {
+  path: string
+  /** Entries that are not baseline (done, failed, queued...). */
+  meetings: number
+  /** Baseline entries: recordings that were there before the library, or that were ignored. */
+  ignored: number
+}
+
+/** How a sign-in or sign-out run ended. */
+export type SigninOutcome = { ok: true; account: string | null } | { ok: false; error: string }
+
+// --- Other payloads ---------------------------------------------------------------------------
+
+export interface LogLine {
+  /** ISO timestamp added by main when the line was received. */
+  ts: string
+  text: string
+  source: 'worker' | 'app'
+}
+
+export interface UploadResult {
+  /** The file the user picked or dropped. */
+  path: string
+  ok: boolean
+  /** Final path in library/uploads (which is also the index key). */
+  dest?: string
+  error?: string
+  /** Copied, but not queued yet (e.g. the worker is down; it picks up library/uploads when it starts). */
+  warning?: string
+}
+
+/** Main asks the renderer to show a page (a toast or tray click). */
+/** signin = open the Google sign-in dialog (the session-expired toast). */
+export type NavigateRequest = { to: 'video'; key: string } | { to: 'dashboard' } | { to: 'signin' }
+
+export interface UploadProgress {
+  path: string
+  copied: number
+  total: number
+}
+
+export type OpenPathKind =
+  'note' | 'noteFolder' | 'library' | 'index' | 'source' | 'compressed' | 'hbLog'
+
+export interface FileFilter {
+  name: string
+  extensions: string[]
+}
+
+export type Unsubscribe = () => void
+
+// --- window.api -------------------------------------------------------------------------------
+
+export interface MissMinutesApi {
+  getState(): Promise<AppState>
+  onState(cb: (state: AppState) => void): Unsubscribe
+  onLog(cb: (lines: LogLine[]) => void): Unsubscribe
+  onNavigate(cb: (request: NavigateRequest) => void): Unsubscribe
+  command(cmd: CommandInput): Promise<Ack>
+
+  uploadFiles(paths: string[]): Promise<UploadResult[]>
+  pickFiles(): Promise<string[]>
+  /** Absolute path of a dropped File (wraps webUtils.getPathForFile). */
+  pathForFile(file: File): string
+  onUploadProgress(cb: (progress: UploadProgress) => void): Unsubscribe
+
+  /** `relPath` is the entry's `notes` value; main only reads inside library/notes. */
+  readNote(relPath: string): Promise<string>
+  readHandbrakeLog(key: string): Promise<string>
+  getWorkerLog(): Promise<LogLine[]>
+  /** Resolved by main from the entry for `key`, never from a raw renderer path. */
+  openPath(kind: OpenPathKind, key?: string): Promise<void>
+
+  getSettings(): Promise<Settings>
+  saveSettings(patch: Partial<Settings>, options: { restart: RestartMode }): Promise<Settings>
+  pickFolder(): Promise<string | null>
+  pickFile(filters?: FileFilter[]): Promise<string | null>
+  /** Why `root` can't run the worker (no watcher.py or .venv python), or null when it can. */
+  checkProjectRoot(root: string): Promise<string | null>
+
+  /** First-run wizard backend (11c·T3). */
+  setup: {
+    /** HandBrake, Chrome, watch folder and profile checks for `watchDir` (the engine's `check`). */
+    check(watchDir: string): Promise<CheckResult>
+    /**
+     * Opens a visible Chrome for Google sign-in; resolves when it ends. Refused while the worker runs.
+     * `switch` signs out first, so a different account can sign in.
+     */
+    signin(options?: { switch: boolean }): Promise<SigninOutcome>
+    /** The library step's choices: a new library folder, and the old project library when there is one. */
+    libraryOptions(): Promise<{ newLibrary: string; found: LibraryInfo | null }>
+    /** The folder's index.json counts, or null when it has no readable index.json. */
+    inspectLibrary(folder: string): Promise<LibraryInfo | null>
+    /** Saves the wizard's choices, marks setup done, applies autostart and starts the worker. */
+    finish(patch: Partial<Settings>): Promise<void>
+  }
+  /** Google account from Settings (11c·T5): the worker is paused while Chrome is used for this. */
+  account: {
+    signin(options: { switch: boolean }): Promise<SigninOutcome>
+    signout(): Promise<SigninOutcome>
+    /** Deletes the automation Chrome profile (bundled mode, Chrome not running). */
+    resetProfile(): Promise<void>
+  }
+  /** Ends a running sign-in/sign-out (kills the engine process; the Chrome window stays). */
+  cancelSignin(): Promise<void>
+  /** Events of the running sign-in/sign-out (login_required carries the wait for the countdown). */
+  onSigninEvent(cb: (event: SigninEvent) => void): Unsubscribe
+
+  app: {
+    quit(): Promise<void>
+    hide(): Promise<void>
+    restartWorker(): Promise<void>
+    getVersion(): Promise<string>
+  }
+}
+
+/** IPC channels. invoke = ipcMain.handle; push = main -> renderer (webContents.send). */
+export const IPC = {
+  getState: 'state:get',
+  command: 'worker:command',
+  uploadFiles: 'uploads:add',
+  pickFiles: 'uploads:pick',
+  readNote: 'files:read-note',
+  readHandbrakeLog: 'files:read-hb-log',
+  getWorkerLog: 'worker:log',
+  openPath: 'files:open',
+  getSettings: 'settings:get',
+  saveSettings: 'settings:save',
+  pickFolder: 'dialog:pick-folder',
+  pickFile: 'dialog:pick-file',
+  checkProjectRoot: 'settings:check-root',
+  setupCheck: 'setup:check',
+  setupSignin: 'setup:signin',
+  setupFinish: 'setup:finish',
+  setupLibraryOptions: 'setup:library-options',
+  setupInspectLibrary: 'setup:inspect-library',
+  signinCancel: 'setup:signin-cancel',
+  accountSignin: 'account:signin',
+  accountSignout: 'account:signout',
+  accountResetProfile: 'account:reset-profile',
+  quit: 'app:quit',
+  hide: 'app:hide',
+  restartWorker: 'app:restart-worker',
+  getVersion: 'app:version',
+  // push
+  state: 'state:changed',
+  log: 'worker:log-lines',
+  uploadProgress: 'uploads:progress',
+  navigate: 'app:navigate',
+  setupEvent: 'setup:event'
+} as const

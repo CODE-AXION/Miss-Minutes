@@ -1,0 +1,444 @@
+/*
+ * Miss Minutes theme: a TVA-inspired retro-futurist office (04a).
+ * Every colour in the app comes from these shadcn CSS variables; components keep their stock shadcn code.
+ *
+ * Light = "TVA Office" (cream paper, burnt orange, wood-panel sidebar).
+ * Dark  = "CRT Terminal" (near-black brown, amber/orange phosphor).
+ *
+ * Contrast (WCAG 2.2, checked 2026-10-13): every text/background pair below is >= 4.5:1, input borders and the
+ * focus ring are >= 3:1. `--brand` is the bright TVA orange for decoration only (timeline rail, art, glow);
+ * text and button fills use `--primary`, which is darker in light mode so cream text on it passes AA.
+ * Known exception: shadcn's destructive button *hover* tint (destructive/20-30) dips to ~4.4 (light) / ~3.9 (dark);
+ * the resting state passes. Inline links use `--link`, not `--primary`.
+ */
+
+/* Dark mode is a class on <html> (lib/theme.ts mirrors prefers-color-scheme, which follows nativeTheme). */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.375rem;
+
+  --background: #f4ebd9;
+  --foreground: #2b1d12;
+  --card: #fbf5e9;
+  --card-foreground: #2b1d12;
+  --popover: #fbf5e9;
+  --popover-foreground: #2b1d12;
+  --primary: #ac4c15;
+  --primary-foreground: #fff8ee;
+  --secondary: #d9cdb4;
+  --secondary-foreground: #2b1d12;
+  --muted: #e8ddc7;
+  --muted-foreground: #634f3b;
+  --accent: #f2b33d;
+  --accent-foreground: #2b1d12;
+  --destructive: #a8361b;
+  --destructive-foreground: #fff8ee;
+  --success: #4a6322;
+  --success-foreground: #fff8ee;
+  --warning: #865710;
+  --warning-foreground: #fff8ee;
+  --link: #9a4a16;
+  --brand: #d2691e;
+  --border: #cdbb9a;
+  --input: #9c8565;
+  --ring: #ac4c15;
+  --glow: 0 0 8px rgb(255 170 60 / 0.45);
+  --scanline: rgb(43 29 18 / 0.04);
+
+  --chart-1: #d2691e;
+  --chart-2: #4a6322;
+  --chart-3: #f2b33d;
+  --chart-4: #6e4a2e;
+  --chart-5: #a8361b;
+
+  --sidebar: #3a2718;
+  --sidebar-foreground: #f3e3c3;
+  --sidebar-primary: #f28c38;
+  --sidebar-primary-foreground: #1a120c;
+  --sidebar-accent: #4e3522;
+  --sidebar-accent-foreground: #f3e3c3;
+  --sidebar-border: #5a402b;
+  --sidebar-ring: #f28c38;
+}
+
+.dark {
+  --background: #16100b;
+  --foreground: #f3e3c3;
+  --card: #211811;
+  --card-foreground: #f3e3c3;
+  --popover: #211811;
+  --popover-foreground: #f3e3c3;
+  --primary: #f28c38;
+  --primary-foreground: #1a120c;
+  --secondary: #2c2118;
+  --secondary-foreground: #f3e3c3;
+  --muted: #2c2118;
+  --muted-foreground: #a8906f;
+  --accent: #ffc35a;
+  --accent-foreground: #1a120c;
+  --destructive: #f2826a;
+  --destructive-foreground: #1a120c;
+  --success: #a5bf4a;
+  --success-foreground: #1a120c;
+  --warning: #e7a93a;
+  --warning-foreground: #1a120c;
+  --link: #f28c38;
+  --brand: #f28c38;
+  --border: #3d2e21;
+  --input: #7a6249;
+  --ring: #f28c38;
+  --glow: 0 0 8px rgb(255 170 60 / 0.45);
+  --scanline: rgb(255 190 110 / 0.04);
+
+  --chart-1: #f28c38;
+  --chart-2: #a5bf4a;
+  --chart-3: #ffc35a;
+  --chart-4: #c49a6c;
+  --chart-5: #f2826a;
+
+  --sidebar: #100b07;
+  --sidebar-foreground: #f3e3c3;
+  --sidebar-primary: #f28c38;
+  --sidebar-primary-foreground: #1a120c;
+  --sidebar-accent: #2c2118;
+  --sidebar-accent-foreground: #f3e3c3;
+  --sidebar-border: #2c2118;
+  --sidebar-ring: #f28c38;
+
+  /* Mascot legs/shoes on the dark page (the rest of her art is fixed brand colour). */
+  --mascot-limb: #b89a74;
+}
+
+@theme inline {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  /* Page titles, the wordmark, big stat numbers. */
+  --font-display: 'Righteous', 'IBM Plex Sans', sans-serif;
+  /* CRT readouts (timers, ETA, %): VT323 is only legible at >= 20px, never use it for running text. */
+  --font-pixel: 'VT323', 'IBM Plex Mono', monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-link: var(--link);
+  --color-brand: var(--brand);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* shadow-glow / text-shadow-glow: the amber CRT glow. */
+  --shadow-glow: var(--glow);
+  --text-shadow-glow: 0 0 6px rgb(255 170 60 / 0.55);
+
+  --animate-node-pulse: node-pulse 1.6s ease-in-out infinite;
+  --animate-sweep: sweep 2s linear infinite;
+  --animate-sweep-fast: sweep 1s linear infinite;
+  --animate-dot-pulse: dot-pulse 1.2s ease-in-out infinite;
+  --animate-wave: wave 1.4s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-9deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes node-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 0%, transparent);
+  }
+}
+
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+  /* Inline links: pure orange on cream fails AA for small text, so links use the darker --link. */
+  a:not([data-slot]) {
+    @apply text-link underline-offset-2 hover:underline;
+  }
+}
+
+/* Motion is CSS-only and is turned off under reduced motion. The one exception is an element marked
+   data-motion="essential" (the clock spinner's pulsing dot), which only fades and never moves. */
+@media (prefers-reduced-motion: reduce) {
+  *:not([data-motion='essential']),
+  *:not([data-motion='essential'])::before,
+  *:not([data-motion='essential'])::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Brand utilities ---------- */
+
+/* The "MISS MINUTES" wordmark and page titles. */
+@utility wordmark {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* CRT readout: VT323 with the amber glow (>= 20px). */
+@utility readout {
+  font-family: var(--font-pixel);
+  font-size: max(1.25rem, 1em);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand);
+  text-shadow: 0 0 6px rgb(255 170 60 / 0.55);
+}
+
+/* Scanlines + a soft inner vignette for crt-panel. Off with reduced motion and in forced colours. */
+@utility crt-scanlines {
+  position: relative;
+  isolation: isolate;
+  box-shadow: inset 0 0 48px rgb(0 0 0 / 0.18);
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--scanline) 0,
+      var(--scanline) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      display: none;
+    }
+  }
+  @media (forced-colors: active) {
+    box-shadow: none;
+    &::after {
+      display: none;
+    }
+  }
+}
+
+/* Worn rubber-stamp ink: a fixed noise mask knocks small specks out of the stamp. */
+@utility stamp-distress {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.75'/%3E%3C/filter%3E%3Crect width='80' height='40' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-size: 80px 40px;
+  @media (forced-colors: active) {
+    mask-image: none;
+  }
+}
+
+/* Diagonal hazard-poster stripes for the PosterPanel header strip. */
+@utility poster-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--brand) 0 10px,
+    color-mix(in srgb, var(--brand) 70%, var(--foreground)) 10px 20px
+  );
+  @media (forced-colors: active) {
+    background: Canvas;
+  }
+}
+
+/* Faint retro grid for the dashboard background only. */
+@utility retro-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--brand) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--brand) 7%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  @media (forced-colors: active) {
+    background-image: none;
+  }
+}
+
+/* ---------- The Sacred Timeline (used by 07 timeline.tsx and the 06 dashboard step row) ----------
+ * <ol class="timeline">
+ *   <li class="timeline-item" data-state="done|active|pending|pruned">
+ *     <span class="timeline-node" /> ...
+ *     <div class="timeline-branch"> <!-- a failed attempt leaves the main line -->
+ *       <div class="timeline-item" data-state="pruned"><span class="timeline-node" /> ...</div>
+ *     </div>
+ *   </li>
+ * </ol>
+ * The rail is the ::before of .timeline; nodes sit on it at --timeline-x.
+ */
+@utility timeline {
+  --timeline-x: 0.6875rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-left: 2rem;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: var(--timeline-x);
+    width: 2px;
+    transform: translateX(-50%);
+    border-radius: 1px;
+    background: var(--brand);
+    box-shadow: var(--glow);
+  }
+}
+
+@utility timeline-item {
+  position: relative;
+  min-height: 1.5rem;
+}
+
+@utility timeline-node {
+  position: absolute;
+  top: 0.25rem;
+  left: calc(var(--timeline-x) - 2rem);
+  width: 0.875rem;
+  height: 0.875rem;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  border: 2px solid var(--brand);
+  background: var(--card);
+  .timeline-item[data-state='done'] > & {
+    background: var(--brand);
+  }
+  .timeline-item[data-state='active'] > & {
+    background: var(--accent);
+    animation: var(--animate-node-pulse);
+  }
+  .timeline-item[data-state='pending'] > & {
+    border-color: var(--input);
+  }
+  .timeline-item[data-state='pruned'] > & {
+    border-color: var(--destructive);
+    background: var(--destructive);
+  }
+}
+
+/* A retry branch: leaves the main rail with a curve and runs parallel to it, dashed in rust. */
+@utility timeline-branch {
+  --timeline-x: 0.6875rem;
+  position: relative;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+  padding-left: 2rem;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -0.5rem;
+    left: calc(-2rem + var(--timeline-x) - 0.5rem);
+    width: calc(2rem + 0.5rem - 0.0625rem);
+    height: 1.25rem;
+    border-bottom: 2px dashed var(--destructive);
+    border-left: 2px dashed var(--destructive);
+    border-bottom-left-radius: 0.75rem;
+  }
+}
+
+/* The "temporal loom" phase gauge: equal segments, coloured by state. */
+@utility loom {
+  display: flex;
+  gap: 3px;
+  height: 0.625rem;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+}
+
+@utility loom-segment {
+  flex: 1 1 0;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--muted-foreground) 18%, transparent);
+  &[data-state='done'] {
+    background: var(--brand);
+  }
+  &[data-state='active'] {
+    background: var(--accent);
+    box-shadow: var(--glow);
+    animation: var(--animate-dot-pulse);
+  }
+  &[data-state='failed'] {
+    background: var(--destructive);
+  }
+  @media (forced-colors: active) {
+    border: 1px solid CanvasText;
+  }
+}

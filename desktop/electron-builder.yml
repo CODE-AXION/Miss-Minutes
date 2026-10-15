@@ -1,0 +1,49 @@
+# Per-user Windows installer for this PC (09·T1). Bundles the frozen engine (mm-engine, `npm run engine`)
+# and HandBrakeCLI with its licence files (11b); main finds them under process.resourcesPath.
+appId: com.finloge.missminutes # = setAppUserModelId in main; toasts need the shortcut's AUMID to match
+productName: Miss Minutes
+directories:
+  buildResources: build
+  output: dist
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!scripts/*'
+  - '!engine/**'
+  - '!resources/brand/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md,components.json}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asar: true
+# Tray PNGs, the notification mascot and the window icon are read from disk by main
+# (resources/ -> app.asar.unpacked/resources).
+asarUnpack:
+  - resources/**
+# Executables can't run from inside the asar, so these stay plain folders in resources/.
+extraResources:
+  - from: engine/dist/mm-engine
+    to: engine
+  - from: ../tools/handbrake
+    to: handbrake
+    filter:
+      - HandBrakeCLI.exe
+      - doc/**
+win:
+  target: nsis
+  icon: resources/icon.ico
+  executableName: Miss Minutes
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  runAfterFinish: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  artifactName: ${productName} Setup ${version}.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  # Uninstall shortcut, autostart cleanup and the optional delete-library / delete-settings questions.
+  include: build/installer.nsh
+npmRebuild: false

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Miss Minutes app icon: the mascot's clock-face disc on a cream rounded square (04a·T4). -->
+  <rect x="4" y="4" width="248" height="248" rx="56" fill="#F4EBD9" stroke="#3B2416" stroke-width="8"/>
+  <ellipse cx="120" cy="130" rx="102" ry="108" fill="#D2691E" stroke="#3B2416" stroke-width="7"/>
+  <ellipse cx="132" cy="128" rx="102" ry="108" fill="#F29A32" stroke="#3B2416" stroke-width="7"/>
+  <path d="M132 30 V52 M132 226 V204 M40 128 H62 M224 128 H202" stroke="#3B2416" stroke-width="12" stroke-linecap="round"/>
+  <path d="M86 52 l7 12 M178 52 l-7 12 M52 82 l12 7 M212 82 l-12 7 M52 174 l12 -7 M212 174 l-12 -7 M86 204 l7 -12 M178 204 l-7 -12" stroke="#3B2416" stroke-width="6" stroke-linecap="round"/>
+  <!-- lashes -->
+  <path d="M82 76 l-10 -8 M90 68 l-5 -11 M100 65 l1 -12 M182 76 l10 -8 M174 68 l5 -11 M164 65 l-1 -12" stroke="#3B2416" stroke-width="6" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="102" cy="108" rx="24" ry="34" fill="#FFF8EC" stroke="#3B2416" stroke-width="6"/>
+  <ellipse cx="162" cy="108" rx="24" ry="34" fill="#FFF8EC" stroke="#3B2416" stroke-width="6"/>
+  <ellipse cx="102" cy="112" rx="14" ry="21" fill="#2A1B22"/>
+  <ellipse cx="162" cy="112" rx="14" ry="21" fill="#2A1B22"/>
+  <ellipse cx="107" cy="102" rx="4" ry="6" fill="#FFF8EC"/>
+  <ellipse cx="167" cy="102" rx="4" ry="6" fill="#FFF8EC"/>
+  <circle cx="132" cy="150" r="6" fill="#3B2416"/>
+  <!-- smile with teeth -->
+  <path d="M96 168 Q132 202 170 166 Q132 180 96 168 Z" fill="#6B2A12" stroke="#3B2416" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M102 170.5 Q132 179 164 168.5 Q133 188 102 170.5 Z" fill="#FFFFFF"/>
+</svg>
