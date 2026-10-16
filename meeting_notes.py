@@ -495,6 +495,38 @@ def wait_for_upload(page: Page, upload_timeout: int) -> None:
     emit("upload_ready", seconds=round(time.monotonic() - started))
 
 
+def enable_agentic_video(page: Page, video: Path) -> None:
+    """Turn on "Agentic video understanding" for the attached video; notes are always made with it.
+
+    It is a per-video option in the video's settings dialog and is off by default, so it is set on
+    every new upload and checked on a resumed tab. Raises if it cannot be confirmed on.
+    """
+    chip = page.locator("[data-test-id='prompt-media-container']").filter(has_text=video.name).first
+    dialog = page.locator("ms-video-options-dialog")
+    switch = dialog.locator("[data-test-id='agenticVideoToggle'] button[role='switch']")
+
+    def open_dialog() -> None:
+        chip.locator("button[aria-label='Edit video options']").click()
+        switch.wait_for(timeout=10_000)
+
+    open_dialog()
+    if switch.get_attribute("aria-checked") == "true":
+        dialog.get_by_role("button", name="Cancel").click()
+    else:
+        switch.click()
+        page.wait_for_function("s => s.getAttribute('aria-checked') === 'true'", arg=switch.element_handle(), timeout=5_000)
+        dialog.get_by_role("button", name="Save").click()
+        dialog.wait_for(state="hidden", timeout=10_000)
+        open_dialog()  # confirm the saved setting stuck
+        on = switch.get_attribute("aria-checked") == "true"
+        dialog.get_by_role("button", name="Cancel").click()
+        if not on:
+            raise RuntimeError("agentic video understanding did not stay on after saving")
+    dialog.wait_for(state="hidden", timeout=10_000)
+    log("[upload] agentic video understanding on")
+    emit("agentic_video")
+
+
 def run_prompt(page: Page, prompt: str, run_timeout: int) -> None:
     page.get_by_role("textbox", name="Enter a prompt").fill(prompt)
     run_btn = page.locator("ms-run-button button")
@@ -576,6 +608,7 @@ def generate_document(studio: StudioSession, video: Path, model: str, args: argp
         emit("chat_open", model=model)
         configure_run_settings(page, SYSTEM_INSTRUCTION, args.thinking_level)
         attach_video(page, video, args.upload_timeout)
+    enable_agentic_video(page, video)
     run_prompt(page, build_prompt(args.context, args.language), args.timeout)
     return copy_last_answer(page)
 

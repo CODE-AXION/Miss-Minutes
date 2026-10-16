@@ -98,6 +98,12 @@ export const STAGES: { [S in StageId]: StageInfo<S> } = {
     tone: 'success',
     describe: (d) => `processed in ${formatDuration(d.seconds)}`
   },
+  agentic_video: {
+    label: 'Agentic video understanding on',
+    icon: ScanSearch,
+    tone: 'info',
+    describe: none
+  },
   run_retry_click: {
     label: 'Run clicked again',
     icon: MousePointerClick,
@@ -162,6 +168,7 @@ const PHASE_OF: Record<StageId, number> = {
   resumed_tab: 2,
   upload_start: 2,
   upload_ready: 3,
+  agentic_video: 3,
   run_retry_click: 3,
   generating: 3,
   copy_fallback: 3,

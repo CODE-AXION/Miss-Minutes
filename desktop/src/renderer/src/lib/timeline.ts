@@ -111,6 +111,7 @@ const PHASE_AFTER: Record<StageId, BarPhaseId | null> = {
   resumed_tab: 'setup',
   upload_start: 'upload',
   upload_ready: 'generate',
+  agentic_video: 'generate',
   run_retry_click: 'generate',
   generating: 'generate',
   copy_fallback: 'generate',

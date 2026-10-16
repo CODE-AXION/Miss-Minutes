@@ -29,6 +29,7 @@ export type StageId =
   | 'resumed_tab'
   | 'upload_start'
   | 'upload_ready'
+  | 'agentic_video'
   | 'run_retry_click'
   | 'generating'
   | 'copy_fallback'
@@ -55,6 +56,7 @@ export interface StageDetails {
   resumed_tab: NoDetail
   upload_start: { size_mb: number }
   upload_ready: { seconds: number }
+  agentic_video: NoDetail
   /** `n` = click number (1-3); `hint` = visible AI Studio error text, may be empty. */
   run_retry_click: { n: number; hint: string }
   generating: NoDetail
