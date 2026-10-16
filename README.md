@@ -80,9 +80,10 @@ You do **not** need Python, HandBrake or anything else: the installer includes t
 | **2. Google Chrome**<br/>Checks that Chrome is installed. If not, use **Download Chrome**, then **Check again**. | ![Setup step 2](docs/images/setup-2-chrome.png) |
 | **3. Sign in to Google**<br/>**Sign in** opens a Chrome window: sign in to the account you use for AI Studio and the wizard notices by itself. **Skip for now** is fine too: Miss Minutes asks when it first needs it. | ![Setup step 3](docs/images/setup-3-google.png) |
 | **4. Meeting notes**<br/>Where the library goes. An existing library is found and offered (it is used in place, nothing is copied), or start a new one in `Documents\Miss Minutes`, or pick any folder. | ![Setup step 4](docs/images/setup-4-library.png) |
-| **5. Recordings**<br/>The folder your recordings are saved to (default: your `Videos` folder). | ![Setup step 5](docs/images/setup-5-recordings.png) |
-| **6. Start with Windows**<br/>On: Miss Minutes starts quietly in the tray when you sign in to Windows, so no recording is missed. | ![Setup step 6](docs/images/setup-6-autostart.png) |
-| **7. Done**<br/>A summary. **Start Miss Minutes** starts watching. | ![Setup step 7](docs/images/setup-7-done.png) |
+| **5. Smart search**<br/>Optional: search your notes by meaning, not just by keyword. **Not now** is preselected. **Turn on smart search** downloads a 207 MB search model once, after you start; nothing leaves your PC. See [Searching your notes](#searching-your-notes). | ![Setup step 5](docs/images/setup-5-search.png) |
+| **6. Recordings**<br/>The folder your recordings are saved to (default: your `Videos` folder). | ![Setup step 6](docs/images/setup-6-recordings.png) |
+| **7. Start with Windows**<br/>On: Miss Minutes starts quietly in the tray when you sign in to Windows, so no recording is missed. | ![Setup step 7](docs/images/setup-7-autostart.png) |
+| **8. Done**<br/>A summary. **Start Miss Minutes** starts watching. | ![Setup step 8](docs/images/setup-8-done.png) |
 
 You can change every choice later in **Settings**.
 
@@ -113,6 +114,7 @@ If a video is being processed when you quit, Miss Minutes asks first. That video
 - **Up next:** the waiting queue.
 - **Add videos:** drag video files here, or use **Choose files**, to process a recording from anywhere. It is copied into the library and processed **first**, with no 2-minute wait.
 - **Recently completed:** links to the newest notes.
+- **Smart search card:** appears only while smart search is being set up (download, then indexing) and hides itself when it is ready. If it fails, it shows the reason and **Retry**.
 - **Pause / Scan now** (bottom left): pause stops *new* videos from starting (the current one finishes); scan now looks for new recordings immediately.
 
 ### Queue
@@ -140,13 +142,28 @@ Status words have a TVA theme. Hover a status to see its plain meaning:
 ![Library](docs/images/library.png)
 
 All your meetings. You can:
-- search titles and summaries;
+- search inside the full text of every note (see [Searching your notes](#searching-your-notes));
 - filter by category, tags, date range or origin (watch folder or upload);
 - group the list **flat**, **by category** or **by tag**.
 
 The buttons at the top rebuild or open `INDEX.md` (a Markdown table of contents of all your notes) and open the library folder.
 
 Categories: `flow-walkthrough`, `requirements`, `change-request`, `doubt-clearing`, `demo-review`, `technical-design`, `planning-status`, `other`.
+
+### Searching your notes
+
+Type in the Library's **Search notes** box. Results replace the table as you type: the matching **passages**, grouped by meeting, not just whole meetings. A passage is a decision, an action item, a question with its answer, a business rule, a glossary term or a note bullet. Each one shows its section and its `[MM:SS]` timestamp, with the matching words highlighted. Click a passage to open the note scrolled to that section.
+
+The category, tag, date and origin filters still apply on top of the search.
+
+**Keyword search** works for everyone, with no download. It matches the words you type, e.g. `duplicate invoice`.
+
+**Smart search** (optional) finds things by meaning, so the words don't have to match. Type a question, e.g. *"when did we agree to drop the manual approval step?"*, and press **Enter**.
+- Turn it on in the setup wizard or in **Settings → Smart search**.
+- The first time, it downloads a 207 MB search model and then indexes your meetings in the background (about 2 seconds each). Search keeps working by keyword meanwhile, and the Settings card and the dashboard show the progress.
+- It runs entirely on your PC: your notes are never sent anywhere. A search takes a few hundredths of a second.
+- New and edited notes are indexed automatically.
+- Turning it off keeps the downloaded files, so turning it on again is instant. Tick **Also delete downloaded files** to free the space instead (about 210 MB).
 
 ### A meeting
 
@@ -183,6 +200,7 @@ The live engine log, with search and tag filters. This is the first place to loo
 - **AI Studio:** the model, a fallback model, thinking level, language, retries and timeouts.
   - **Background context** (project names, usual attendees, domain terms) makes the notes noticeably more accurate.
   - **Show the automation browser** makes the hidden Chrome visible, for troubleshooting.
+- **Smart search:** turn meaning-based search on or off, watch the download and indexing, **Retry** after a failure, **Rebuild index**, and delete the downloaded files. It takes effect right away (no Save) and never restarts the engine.
 - **App:** the library folder, start at Windows login, start hidden, Miss Minutes' voice (the playful messages), theme (light *Office* or dark *CRT*), and developer mode.
 - **Notifications:** choose which notifications you get: notes ready, final failure, every failure.
 
@@ -215,6 +233,8 @@ The automation Chrome uses its **own** profile, separate from your everyday Chro
 | The app | `%LOCALAPPDATA%\Programs\Miss Minutes` | Yes |
 | **Library**: notes, `index.json`, `INDEX.md`, compressed videos, uploads, logs | `Documents\Miss Minutes` by default, or the folder you chose (Settings → App → Library folder) | **Only if you say Yes** |
 | Settings, Google sign-in (automation browser profile), app logs | `%APPDATA%\Miss Minutes` | **Only if you say Yes** |
+| Smart search model (only if you turned it on, about 207 MB) | `%APPDATA%\Miss Minutes\models` | **Only if you say Yes** (the settings question) |
+| Search index | `.search` folder inside the library | With the library (**only if you say Yes**) |
 | Your original recordings | your recordings folder (e.g. `Videos`) | **Never** |
 
 Back up the library folder to keep your notes safe. It is plain files (Markdown and JSON).
@@ -239,7 +259,7 @@ This question only appears when the app uses a library of its own (one with an `
 
 **2. "Also delete your settings and Google sign-in?"**
 
-This is `%APPDATA%\Miss Minutes`: settings, the automation browser profile and app logs.
+This is `%APPDATA%\Miss Minutes`: settings, the automation browser profile, app logs and the downloaded smart search model.
 - **No:** a reinstall keeps your settings and Google sign-in.
 - **Yes:** a completely fresh start. The setup wizard and Google sign-in run again after reinstalling.
 
@@ -311,6 +331,7 @@ Use `--help` on any command for every option. Don't run the command-line watcher
 
 ```bash
 .venv/Scripts/python.exe -m pytest tests     # Python
+cd desktop && npm test                       # desktop unit tests (vitest)
 cd desktop && npm run typecheck && npx eslint src scripts *.ts *.mjs && npx prettier --check src scripts
 ```
 
