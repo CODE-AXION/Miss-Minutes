@@ -10,6 +10,7 @@ import type { Ack, CommandInput, CommandName } from '@shared/protocol'
 import { openPath, readHandbrakeLog, readNote } from './files'
 import { join } from 'path'
 import { DEFAULT_PROJECT_ROOT, validateRoot } from './settings'
+import type { SearchService } from './search/service'
 import { inspectLibrary, type EngineTasks } from './setup'
 import type { State } from './state'
 import type { Uploads } from './uploads'
@@ -21,6 +22,7 @@ export interface IpcContext {
   uploads: Uploads
   log: LogBuffer
   tasks: EngineTasks
+  search: SearchService
   window(): BrowserWindow | null
   saveSettings(patch: Partial<Settings>, restart: RestartMode): Promise<Settings>
   finishSetup(patch: Partial<Settings>): Promise<void>
@@ -53,6 +55,10 @@ const OPEN_KINDS: ReadonlySet<string> = new Set<OpenPathKind>([
   'compressed',
   'hbLog'
 ])
+
+/** Longest search query accepted, and the most passages one search returns. */
+const MAX_QUERY = 500
+const MAX_LIMIT = 100
 
 export function registerIpc(ctx: IpcContext): void {
   /** Only our own window may call main. */
@@ -157,6 +163,40 @@ export function registerIpc(ctx: IpcContext): void {
   )
   handle(IPC.accountSignout, () => ctx.tasks.runSignin('signout'))
   handle(IPC.accountResetProfile, () => ctx.tasks.resetProfile())
+
+  // Search (SS·T16): the renderer gets passages by index key, never file paths.
+  handle(
+    IPC.searchQuery,
+    (q: string, options?: { smart?: boolean; keys?: unknown; limit?: unknown }) => {
+      if (typeof q !== 'string' || q.length > MAX_QUERY) throw new Error('Invalid query')
+      const keys = options?.keys
+      if (
+        keys !== undefined &&
+        (!Array.isArray(keys) || !keys.every((k) => typeof k === 'string' && k in ctx.state.videos))
+      )
+        throw new Error('Unknown video')
+      const limit =
+        typeof options?.limit === 'number' && Number.isInteger(options.limit)
+          ? Math.min(Math.max(options.limit, 1), MAX_LIMIT)
+          : undefined
+      return ctx.search.query(q, {
+        smart: options?.smart === true,
+        keys: keys as string[] | undefined,
+        limit
+      })
+    }
+  )
+  handle(
+    IPC.searchSetEnabled,
+    async (enabled: boolean, options?: { deleteFiles?: boolean }): Promise<void> => {
+      if (typeof enabled !== 'boolean') throw new Error('enabled must be a boolean')
+      // smartSearch isn't part of workerSignature, so this save never restarts the engine.
+      await ctx.saveSettings({ smartSearch: enabled }, 'after-current')
+      if (!enabled && options?.deleteFiles === true) await ctx.search.deleteFiles()
+    }
+  )
+  handle(IPC.searchRetry, () => ctx.search.retry())
+  handle(IPC.searchRebuild, () => ctx.search.rebuild())
 
   handle(IPC.quit, () => ctx.quit())
   handle(IPC.hide, () => ctx.window()?.hide())

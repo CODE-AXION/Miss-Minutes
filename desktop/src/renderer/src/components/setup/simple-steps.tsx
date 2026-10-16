@@ -5,7 +5,7 @@ import { HealthCard } from '@/components/health-card'
 import { PathSetting, SwitchSetting } from '@/components/settings/fields'
 import type { CheckState, StepProps } from '@/components/setup/types'
 
-/** Step 5: the watch folder. */
+/** Step 6: the watch folder. */
 export function RecordingsStep({ state, draft, update }: StepProps): JSX.Element {
   return (
     <div className="flex flex-col gap-5">
@@ -23,7 +23,7 @@ export function RecordingsStep({ state, draft, update }: StepProps): JSX.Element
   )
 }
 
-/** Step 6: autostart (openAtLogin, started hidden in the tray). */
+/** Step 7: autostart (openAtLogin, started hidden in the tray). */
 export function StartupStep({ state, draft, update }: StepProps): JSX.Element {
   return (
     <div className="flex flex-col gap-5">
@@ -48,7 +48,7 @@ function Row({ label, children }: { label: string; children: ReactNode }): JSX.E
   )
 }
 
-/** Step 7: what was chosen, warnings from the last check, and the health details. */
+/** Step 8: what was chosen, warnings from the last check, and the health details. */
 export function DoneStep({ state, draft, check }: StepProps & { check: CheckState }): JSX.Element {
   const account = state.google.account
   const result = check.status === 'done' ? check.result : null
@@ -82,6 +82,9 @@ export function DoneStep({ state, draft, check }: StepProps & { check: CheckStat
         </Row>
         <Row label="Recordings folder">
           <code className="text-sm">{draft.watchDir}</code>
+        </Row>
+        <Row label="Smart search">
+          {draft.smartSearch ? 'On: the search model downloads after you start' : 'Not now'}
         </Row>
         <Row label="Start with Windows">{draft.autostart ? 'Yes, in the tray' : 'No'}</Row>
       </dl>

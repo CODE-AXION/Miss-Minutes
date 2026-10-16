@@ -19,7 +19,8 @@ const meetings = (info: LibraryInfo): string =>
 
 const same = (a: string, b: string): boolean => a.toLowerCase() === b.toLowerCase()
 
-function Choice({
+/** One option of a wizard radio group (also used by the Smart search step). */
+export function Choice({
   selected,
   onSelect,
   title,

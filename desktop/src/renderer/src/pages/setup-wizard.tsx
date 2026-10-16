@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import type { AppState } from '@shared/api'
 import { ChromeStep } from '@/components/setup/chrome-step'
 import { LibraryStep, type LibraryOptions } from '@/components/setup/library-step'
+import { SearchStep } from '@/components/setup/search-step'
 import { DoneStep, RecordingsStep, StartupStep } from '@/components/setup/simple-steps'
 import { SigninStep } from '@/components/setup/signin-step'
 import { StepIndicator } from '@/components/setup/step-indicator'
@@ -19,6 +20,7 @@ const STEPS = [
   'Google Chrome',
   'Sign in to Google',
   'Meeting notes',
+  'Smart search',
   'Recordings',
   'Start with Windows',
   'Done'
@@ -26,7 +28,8 @@ const STEPS = [
 const CHROME = 1
 const SIGNIN = 2
 const LIBRARY = 3
-const RECORDINGS = 4
+const SEARCH = 4
+const RECORDINGS = 5
 const DONE = STEPS.length - 1
 
 /**
@@ -41,7 +44,8 @@ export function SetupWizard({ state }: { state: AppState }): JSX.Element {
     library: settings.library,
     libraryInfo: null,
     watchDir: settings.watchDir,
-    autostart: settings.openAtLogin
+    autostart: settings.openAtLogin,
+    smartSearch: settings.smartSearch
   }))
   const [options, setOptions] = useState<LibraryOptions | null>(null)
   const [check, setCheck] = useState<CheckState>({ status: 'idle' })
@@ -106,6 +110,8 @@ export function SetupWizard({ state }: { state: AppState }): JSX.Element {
         return !signingIn
       case LIBRARY:
         return !!options && !!draft.library
+      case SEARCH:
+        return true
       case RECORDINGS:
         return !!draft.watchDir.trim()
       default:
@@ -119,7 +125,8 @@ export function SetupWizard({ state }: { state: AppState }): JSX.Element {
       await window.api.setup.finish({
         library: draft.library,
         watchDir: draft.watchDir.trim(),
-        openAtLogin: draft.autostart
+        openAtLogin: draft.autostart,
+        smartSearch: draft.smartSearch
       })
     } catch (error) {
       toast.error(errorMessage(error))
@@ -138,6 +145,7 @@ export function SetupWizard({ state }: { state: AppState }): JSX.Element {
     />,
     <SigninStep key="signin" {...props} check={check} signin={signin} />,
     <LibraryStep key="library" {...props} options={options} />,
+    <SearchStep key="search" {...props} />,
     <RecordingsStep key="recordings" {...props} />,
     <StartupStep key="startup" {...props} />,
     <DoneStep key="done" {...props} check={check} />

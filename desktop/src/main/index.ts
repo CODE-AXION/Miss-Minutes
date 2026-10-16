@@ -16,6 +16,7 @@ import {
   WINDOW_BACKGROUND,
   workerSignature
 } from './settings'
+import { SearchService } from './search/service'
 import { EngineTasks } from './setup'
 import { State } from './state'
 import { AppTray } from './tray'
@@ -34,6 +35,8 @@ const startHidden = process.argv.includes('--hidden')
 const state = new State(loadSettings())
 const log = new LogBuffer(join(state.settings.library, 'logs'))
 const supervisor = new Supervisor(state, log, () => state.settings)
+// Search runs in main and its own utilityProcess, so it keeps working while the engine is down (SS·T14).
+const search = new SearchService(state, app.getPath('userData'), (text) => log.add('app', text))
 let mainWindow: BrowserWindow | null = null
 let tray: AppTray | null = null
 let notifier: Notifier | null = null
@@ -148,6 +151,10 @@ async function updateSettings(patch: Partial<Settings>, restart: RestartMode): P
   if (next.theme !== before.theme) applyTheme(next)
   if (next.openAtLogin !== before.openAtLogin || next.startHidden !== before.startHidden)
     applyLoginItem(next)
+  // Not awaited: a library switch or turning smart search off must not hold up the save.
+  search
+    .applySettings(before, next)
+    .catch((error: Error) => log.add('app', `search: ${error.message}`))
   if (workerSignature(next) !== workerSignature(before)) {
     if (!supervisor.up && next.library !== before.library) state.watchIndex(next.library)
     await supervisor.restart(restart)
@@ -187,7 +194,10 @@ async function quitApp({ confirm = true } = {}): Promise<void> {
     if (response !== 0) return
   }
   isQuitting = true
-  await supervisor.shutdownForQuit()
+  await Promise.all([
+    supervisor.shutdownForQuit(),
+    search.dispose().catch((error: Error) => log.add('app', `search: ${error.message}`))
+  ])
   await log.flush()
   tray?.destroy()
   app.exit(0)
@@ -238,6 +248,7 @@ app.whenReady().then(() => {
     uploads,
     log,
     tasks,
+    search,
     window: () => mainWindow,
     saveSettings: updateSettings,
     finishSetup,
@@ -263,6 +274,7 @@ app.whenReady().then(() => {
   // The library shows right away (read-only); the worker's snapshot replaces it once it is up.
   state.watchIndex(state.settings.library)
   supervisor.start()
+  search.start(state.settings).catch((error: Error) => log.add('app', `search: ${error.message}`))
 })
 
 // A tray app: closing the window never quits.

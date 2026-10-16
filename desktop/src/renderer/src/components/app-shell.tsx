@@ -6,6 +6,7 @@ import { SigninDialog } from '@/components/signin/signin-dialog'
 import { openSignin } from '@/components/signin/signin-request'
 import { WindowDropOverlay } from '@/components/upload-dropzone'
 import { WorkerBanner } from '@/components/worker-banner'
+import { useSearchToasts } from '@/hooks/use-search-toasts'
 import { videoPath } from '@/lib/paths'
 import { SetupWizard } from '@/pages/setup-wizard'
 import { useApp } from '@/store'
@@ -25,6 +26,7 @@ export function AppShell(): JSX.Element {
       }),
     [navigate]
   )
+  useSearchToasts()
 
   if (state?.setupNeeded)
     return (

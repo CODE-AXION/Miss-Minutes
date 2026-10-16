@@ -13,6 +13,7 @@ import type {
   VideoEntry,
   WorkerStateName
 } from './protocol'
+import type { ChunkType } from './chunker'
 
 // --- Settings (electron-store; defaults mirror argparse, see 05·T1) ------------------------
 
@@ -58,6 +59,8 @@ export interface Settings {
   notify: { done: boolean; failedFinal: boolean; everyFailure: boolean }
   theme: ThemeSetting
   voice: boolean
+  /** Opt-in semantic search (EmbeddingGemma 2, local). Keyword search is always on. */
+  smartSearch: boolean
 }
 
 /** after-current = restart the worker once the current video is finished; now = kill and requeue it. */
@@ -101,6 +104,49 @@ export interface AppState {
   signinRunning: boolean
   /** Latest `login_required` stage still unresolved (cleared by the next stage of that video). */
   lastLoginRequired: { key: string; at: string; wait_s: number; hidden: boolean } | null
+  search: SearchStatus
+}
+
+/** Smart search (SS·T13): the keyword index is always there; the semantic layer is opt-in. */
+export interface SearchStatus {
+  keyword: { meetings: number; passages: number }
+  smart:
+    | { phase: 'off' }
+    | { phase: 'downloading'; bytes: number; total: number }
+    /** Meetings embedded / meetings wanted. */
+    | { phase: 'indexing'; done: number; total: number }
+    | { phase: 'ready'; meetings: number; diskBytes: number }
+    | { phase: 'error'; message: string; retry: 'download' | 'index' }
+  /** Another Miss Minutes holds `<library>/.search/lock`: searching works, nothing is saved. */
+  readOnly: boolean
+  /** The model is downloaded (SS·T26): turning smart search on again needs no download. */
+  modelOnDisk: boolean
+  /** What "Also delete downloaded files" frees: the model plus the stored vectors. */
+  diskBytes: number
+}
+
+/** One passage in the results (SS·T15); the renderer opens `/video/<key>` at `anchor`. */
+export interface SearchHit {
+  key: string
+  chunkId: string
+  type: ChunkType
+  section: string
+  /** slug of the section heading ("h-decisions-made"); '' for the meeting summary. */
+  anchor: string
+  /** [MM:SS] of the passage, without brackets. */
+  ts: string | null
+  text: string
+  /** Character ranges of `text` that matched the query, for the snippet. */
+  highlights: [number, number][]
+  score: number
+}
+
+export interface SearchResult {
+  /** Grouped by meeting, best meeting first, at most 3 passages each. */
+  hits: SearchHit[]
+  /** False when only keyword search ran (smart search off, not ready, or it failed for this query). */
+  usedSmart: boolean
+  ms: number
 }
 
 /** From the last `signin` run (persisted) plus what the worker reported since. */
@@ -220,6 +266,21 @@ export interface MissMinutesApi {
   /** Events of the running sign-in/sign-out (login_required carries the wait for the countdown). */
   onSigninEvent(cb: (event: SigninEvent) => void): Unsubscribe
 
+  /** Search over the notes (SS·T16); progress arrives in `AppState.search`. */
+  search: {
+    /** Keyword search; with `smart`, also semantic search once it is ready. `keys` limits it to those meetings. */
+    query(
+      q: string,
+      options: { smart: boolean; keys?: string[]; limit?: number }
+    ): Promise<SearchResult>
+    /** Saves `smartSearch`; turning it off with `deleteFiles` also removes the model and the vectors. */
+    setEnabled(enabled: boolean, options?: { deleteFiles?: boolean }): Promise<void>
+    /** Re-runs the phase that failed (download or indexing). */
+    retry(): Promise<void>
+    /** Re-chunks and re-embeds every meeting. */
+    rebuild(): Promise<void>
+  }
+
   app: {
     quit(): Promise<void>
     hide(): Promise<void>
@@ -256,6 +317,10 @@ export const IPC = {
   hide: 'app:hide',
   restartWorker: 'app:restart-worker',
   getVersion: 'app:version',
+  searchQuery: 'search:query',
+  searchSetEnabled: 'search:set-enabled',
+  searchRetry: 'search:retry',
+  searchRebuild: 'search:rebuild',
   // push
   state: 'state:changed',
   log: 'worker:log-lines',

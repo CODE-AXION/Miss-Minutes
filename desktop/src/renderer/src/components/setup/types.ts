@@ -8,6 +8,8 @@ export interface WizardDraft {
   libraryInfo: LibraryInfo | null
   watchDir: string
   autostart: boolean
+  /** Opt-in smart search (SS·T25); the download starts only after Start Miss Minutes. */
+  smartSearch: boolean
 }
 
 /** The engine's `check` for the current watch folder. */

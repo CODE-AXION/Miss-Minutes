@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress'
 import { CrtPanel, Readout } from '@/components/brand/crt-panel'
 import { AnimatedMascot } from '@/components/brand/animated-mascot'
 import { Mascot, type MascotPose } from '@/components/brand/mascot'
+import { SmartSearchCard } from '@/components/smart-search-card'
 import { StatusBadge } from '@/components/status-badge'
 import { UploadDropzone } from '@/components/upload-dropzone'
 import {
@@ -342,6 +343,7 @@ export function DashboardPage(): JSX.Element | null {
   return (
     <div className="flex flex-col gap-6">
       <NowProcessing state={state} />
+      <SmartSearchCard state={state} />
       <Stats state={state} />
       <div className="grid gap-6 lg:grid-cols-2">
         <UpNext state={state} />

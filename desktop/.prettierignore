@@ -8,3 +8,5 @@ tsconfig.*.json
 src/renderer/src/components/ui
 src/renderer/src/hooks
 components.json
+# Test fixtures mirror engine output byte for byte
+src/shared/__fixtures__

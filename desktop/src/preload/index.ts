@@ -46,6 +46,13 @@ const api: MissMinutesApi = {
   cancelSignin: () => ipcRenderer.invoke(IPC.signinCancel),
   onSigninEvent: (cb) => subscribe(IPC.setupEvent, cb),
 
+  search: {
+    query: (q, options) => ipcRenderer.invoke(IPC.searchQuery, q, options),
+    setEnabled: (enabled, options) => ipcRenderer.invoke(IPC.searchSetEnabled, enabled, options),
+    retry: () => ipcRenderer.invoke(IPC.searchRetry),
+    rebuild: () => ipcRenderer.invoke(IPC.searchRebuild)
+  },
+
   app: {
     quit: () => ipcRenderer.invoke(IPC.quit),
     hide: () => ipcRenderer.invoke(IPC.hide),

@@ -33,7 +33,7 @@
       ${EndIf}
     ${EndIf}
     ${If} ${FileExists} "$APPDATA\${PRODUCT_FILENAME}\*.*"
-      ${If} ${Cmd} `MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "Also delete your settings and Google sign-in?$\r$\n$\r$\n$APPDATA\${PRODUCT_FILENAME}$\r$\n(settings, the automation browser profile, logs)$\r$\n$\r$\nChoose Yes for a completely fresh start: the setup wizard and Google sign-in run again. Choose No to keep them." /SD IDNO IDYES`
+      ${If} ${Cmd} `MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "Also delete your settings and Google sign-in?$\r$\n$\r$\n$APPDATA\${PRODUCT_FILENAME}$\r$\n(settings, the automation browser profile, logs, the downloaded search model)$\r$\n$\r$\nChoose Yes for a completely fresh start: the setup wizard and Google sign-in run again. Choose No to keep them." /SD IDNO IDYES`
         StrCpy $mmDeleteAppData "1"
       ${EndIf}
     ${EndIf}

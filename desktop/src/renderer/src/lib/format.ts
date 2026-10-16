@@ -21,6 +21,9 @@ export function formatBytes(bytes: number | null | undefined): string {
   return `${mb.toFixed(1)} MB`
 }
 
+/** Whole decimal megabytes, as the search model's size is quoted ("207 MB"; formatBytes would say 197). */
+export const megabytes = (bytes: number): number => Math.round(bytes / 1e6)
+
 /** "2m 48s", "1h 05m", "42s". */
 export function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.round(seconds))

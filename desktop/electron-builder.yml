@@ -15,11 +15,21 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md,components.json}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  # Smart search (SS·T18): Windows x64 only. transformers.js's Node build never loads the browser
+  # runtime, and a model downloaded during development must never ship (it's fetched on opt-in).
+  - '!node_modules/onnxruntime-web/**'
+  - '!node_modules/onnxruntime-node/bin/napi-v*/{darwin,linux}/**'
+  - '!node_modules/onnxruntime-node/bin/napi-v*/win32/arm64/**'
+  - '!node_modules/@huggingface/transformers/.cache/**'
 asar: true
 # Tray PNGs, the notification mascot and the window icon are read from disk by main
-# (resources/ -> app.asar.unpacked/resources).
+# (resources/ -> app.asar.unpacked/resources). Native .node/.dll files of the search runtime
+# (onnxruntime, sharp) can't be loaded from inside the asar either (SS·T18).
 asarUnpack:
   - resources/**
+  - node_modules/onnxruntime-node/**
+  - node_modules/sharp/**
+  - node_modules/@img/**
 # Executables can't run from inside the asar, so these stay plain folders in resources/.
 extraResources:
   - from: engine/dist/mm-engine

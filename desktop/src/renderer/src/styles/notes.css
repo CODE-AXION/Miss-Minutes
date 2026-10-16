@@ -124,4 +124,18 @@
     font-size: 0.85em;
     white-space: nowrap;
   }
+  /* The section a search result opened (SS·T24) */
+  & h2.note-flash {
+    border-radius: var(--radius-sm);
+    animation: note-flash 1.5s ease-out;
+  }
+}
+
+@keyframes note-flash {
+  from {
+    background: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  to {
+    background: transparent;
+  }
 }

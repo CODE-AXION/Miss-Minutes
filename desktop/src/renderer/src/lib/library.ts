@@ -2,6 +2,9 @@
  * Library filters (08·T1). The core mirrors `watcher.py list` (cmd_list): done entries only, the category is an exact
  * id, tags are AND-ed, and the search is case-insensitive over "title summary". The date range and origin are
  * GUI-only extras. Filters live in the URL search params, so they survive navigation to a video and back.
+ *
+ * The text search itself is now served by main's SearchService over the full notes (SS·T21); `matchesFilters`, with
+ * cmd_list's title/summary test, stays as the fallback when the search index is unavailable.
  */
 import type { VideoEntry } from '@shared/protocol'
 import { slugifyTag } from './format'
@@ -53,22 +56,26 @@ export function hasFilters(f: LibraryFilters): boolean {
   return !!(f.search || f.category || f.tags.length || f.from || f.to || f.origin)
 }
 
-/** cmd_list's tests, in the same order, plus the GUI-only date range and origin. */
-export function matchesFilters(entry: VideoEntry, f: LibraryFilters): boolean {
+/** Every filter but the text search (SS·T21): which meetings the note search may return. */
+export function matchesNonSearchFilters(entry: VideoEntry, f: LibraryFilters): boolean {
   if (entry.status !== 'done') return false
   if (f.category && entry.category !== slugifyTag(f.category)) return false
   const tags = new Set(entry.tags ?? [])
   if (!f.tags.every((t) => tags.has(slugifyTag(t)))) return false
-  if (
-    f.search &&
-    !`${entry.title ?? ''} ${entry.summary ?? ''}`.toLowerCase().includes(f.search.toLowerCase())
-  )
-    return false
   const day = (entry.recorded ?? '').slice(0, 10)
   if (f.from && day < f.from) return false
   if (f.to && day > f.to) return false
   if (f.origin && (entry.origin ?? 'watch') !== f.origin) return false
   return true
+}
+
+/** cmd_list's tests, plus the GUI-only date range and origin. */
+export function matchesFilters(entry: VideoEntry, f: LibraryFilters): boolean {
+  return (
+    matchesNonSearchFilters(entry, f) &&
+    (!f.search ||
+      `${entry.title ?? ''} ${entry.summary ?? ''}`.toLowerCase().includes(f.search.toLowerCase()))
+  )
 }
 
 export function sortEntries<T extends { entry: VideoEntry }>(rows: T[], sort: Sort): T[] {

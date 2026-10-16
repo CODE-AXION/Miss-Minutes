@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MermaidBlock } from '@/components/mermaid-block'
 import { copyText } from '@/store'
+import { slug } from '@shared/slug'
 
 /**
  * The note without its YAML front matter (already shown in the page header) and leading `# Title` line. Line endings
@@ -80,16 +81,6 @@ function hastText(node: HastNode | undefined): string {
   return (node.children ?? []).map(hastText).join('')
 }
 
-function slug(text: string): string {
-  return (
-    'h-' +
-    text
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-  )
-}
-
 function scrollToId(id: string): void {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
@@ -148,13 +139,16 @@ interface TocItem {
 export function NotesViewer({
   entryKey,
   notes,
-  version
+  version,
+  focusSection
 }: {
   entryKey: string
   /** The entry's `notes` path (relative to the library). */
   notes: string
   /** Changes when the note may have changed on disk (the entry's `updated`), to read it again. */
   version: string | undefined
+  /** Heading id to open at (`?section=` from a search result, SS·T24); unknown ids leave the note at the top. */
+  focusSection?: string | null
 }): JSX.Element {
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -181,6 +175,35 @@ export function NotesViewer({
     const headings = article.current?.querySelectorAll<HTMLHeadingElement>('h2[id]') ?? []
     setToc([...headings].map((h) => ({ id: h.id, text: h.textContent ?? '' })))
   }, [text])
+
+  // Open at the searched section once, with a short flash; a later re-read of the note does not jump again.
+  const focused = useRef<string | null>(null)
+  useEffect(() => {
+    const root = article.current
+    if (!focusSection || focused.current === focusSection || !root) return
+    const heading = root.querySelector<HTMLHeadingElement>(`h2[id="${CSS.escape(focusSection)}"]`)
+    if (!heading) return
+    // Mermaid diagrams above the section render after this and push it down: keep it aligned while the layout
+    // settles, until the user scrolls or presses a key.
+    const align = (): void => heading.scrollIntoView({ block: 'start' })
+    const resize = new ResizeObserver(align)
+    const stop = (): void => resize.disconnect()
+    const USER = ['wheel', 'keydown', 'pointerdown', 'touchstart'] as const
+    align()
+    resize.observe(root)
+    for (const name of USER) window.addEventListener(name, stop, { passive: true })
+    heading.classList.add('note-flash')
+    const timer = setTimeout(() => {
+      focused.current = focusSection
+      stop()
+    }, 2000)
+    return () => {
+      clearTimeout(timer)
+      stop()
+      for (const name of USER) window.removeEventListener(name, stop)
+      heading.classList.remove('note-flash')
+    }
+  }, [text, focusSection])
 
   let body: ReactNode
   if (error) body = <p className="text-sm text-destructive">Could not read the note: {error}</p>

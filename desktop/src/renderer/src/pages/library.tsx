@@ -62,11 +62,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { PosterPanel } from '@/components/brand/poster-panel'
 import { EditMetaDialog } from '@/components/edit-meta-dialog'
 import { ReprocessDialog } from '@/components/reprocess-dialog'
+import { SearchResults } from '@/components/search-results'
 import { fileName, formatBytes, parseTs } from '@/lib/format'
 import {
   countValues,
   hasFilters,
   matchesFilters,
+  matchesNonSearchFilters,
   readFilters,
   readGrouping,
   readSort,
@@ -75,6 +77,7 @@ import {
   type SortKey
 } from '@/lib/library'
 import { videoPath } from '@/lib/paths'
+import { useNoteSearch } from '@/lib/search'
 import { canCommand, knownTags, runCommand, useApp } from '@/store'
 
 const ALL = '__all'
@@ -491,6 +494,12 @@ export function LibraryPage(): JSX.Element | null {
       ),
     [done, filters, sort]
   )
+  // The note search (SS·T22) only looks at the meetings the other filters let through.
+  const searchKeys = useMemo(
+    () => done.filter((r) => matchesNonSearchFilters(r.entry, filters)).map((r) => r.key),
+    [done, filters]
+  )
+  const search = useNoteSearch(filters.search, searchKeys)
   const categoryCounts = useMemo(
     () =>
       countValues(
@@ -512,6 +521,13 @@ export function LibraryPage(): JSX.Element | null {
   const up = canCommand(state)
   const meta: TableMeta = { up, onDialog: setDialog }
   const dialogEntry = dialog ? state.videos[dialog.key] : undefined
+  const smart = state.search.smart.phase
+  const searching = !!filters.search.trim()
+  // No index to ask (the IPC failed, or it has not loaded any note yet): cmd_list's title/summary filter instead.
+  const indexMissing = state.search.keyword.meetings === 0 && done.length > 0
+  const fallback = searching && (search.failed || indexMissing)
+  const results = searching && !fallback ? search.result : null
+  const shown = results ? new Set(results.hits.map((h) => h.key)).size : rows.length
 
   const set = (name: string, value: string | string[] | null): void => {
     const next = new URLSearchParams(params)
@@ -551,13 +567,21 @@ export function LibraryPage(): JSX.Element | null {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          className="h-9 w-64"
-          placeholder="Search title and summary"
-          value={filters.search}
-          onChange={(e) => set('q', e.target.value)}
-          aria-label="Search title and summary"
-        />
+        <div className="relative">
+          <Input
+            className="h-9 w-72 pr-36"
+            placeholder="Search notes"
+            value={filters.search}
+            onChange={(e) => set('q', e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && search.runSmart()}
+            aria-label="Search notes"
+          />
+          {(smart === 'ready' || smart === 'indexing') && (
+            <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border px-1.5 text-[11px] text-muted-foreground">
+              Enter = smart search
+            </span>
+          )}
+        </div>
         <Select
           value={filters.category || ALL}
           onValueChange={(v) => set('category', v === ALL ? null : v)}
@@ -643,7 +667,7 @@ export function LibraryPage(): JSX.Element | null {
 
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-muted-foreground tabular-nums">
-          {rows.length} of {done.length} meeting{done.length === 1 ? '' : 's'}
+          {shown} of {done.length} meeting{done.length === 1 ? '' : 's'}
         </span>
         <ToggleGroup
           type="single"
@@ -682,7 +706,26 @@ export function LibraryPage(): JSX.Element | null {
         )}
       </div>
 
-      {rows.length === 0 ? (
+      {fallback && (
+        <p className="text-sm text-muted-foreground">
+          {search.failed ? 'Search index unavailable' : 'Search index is still loading'} — showing
+          title/summary matches.
+        </p>
+      )}
+
+      {searching && !fallback ? (
+        results ? (
+          <SearchResults
+            hits={results.hits}
+            entries={state.videos}
+            usedSmart={results.usedSmart}
+            ms={results.ms}
+            smartOff={smart === 'off'}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">Searching…</p>
+        )
+      ) : rows.length === 0 ? (
         <PosterPanel pose={done.length ? 'point' : 'wave'}>
           {done.length ? 'No meetings match these filters.' : 'No notes yet.'}
         </PosterPanel>

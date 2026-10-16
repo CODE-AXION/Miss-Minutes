@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { HealthCard } from '@/components/health-card'
 import { GoogleAccountCard } from '@/components/settings/google-account'
+import { SmartSearchSettings } from '@/components/settings/smart-search'
 import {
   AiStudioSection,
   AppSection,
@@ -38,7 +39,8 @@ export function SettingsPage(): JSX.Element | null {
   const [formKey, setFormKey] = useState(0)
 
   const saved = state?.settings
-  const current = draft ?? saved
+  // smartSearch is saved at once by its own card (SS·T26): never part of the draft, so Save can't revert it.
+  const current = draft && saved ? { ...draft, smartSearch: saved.smartSearch } : saved
 
   const onValidity = useCallback((id: string, valid: boolean) => {
     setInvalid((set) => {
@@ -111,6 +113,7 @@ export function SettingsPage(): JSX.Element | null {
         <CompressionSection {...props} />
         <GoogleAccountCard state={state} />
         <AiStudioSection {...props} />
+        <SmartSearchSettings state={state} />
         <AppSection {...props} rootError={rootError} />
         <NotificationsSection {...props} />
       </div>

@@ -473,7 +473,14 @@ export function VideoDetailPage(): JSX.Element | null {
           <TimelineTab entryKey={key} entry={entry} state={state} />
         </TabsContent>
         <TabsContent value="notes">
-          {entry.notes && <Notes entryKey={key} notes={entry.notes} version={entry.updated} />}
+          {entry.notes && (
+            <Notes
+              entryKey={key}
+              notes={entry.notes}
+              version={entry.updated}
+              focusSection={params.get('section')}
+            />
+          )}
         </TabsContent>
         <TabsContent value="logs">
           <LogsTab entryKey={key} entry={entry} state={state} />

@@ -63,6 +63,14 @@ const LINES = {
     plain: 'Where should your meeting notes be saved?',
     flavoured: 'Where should I file your meeting notes, hon?'
   },
+  'setup.search': {
+    plain: 'Search your notes by meaning, not just by the exact words?',
+    flavoured: 'Want me to find things by what you meant, hon, not just the exact words you typed?'
+  },
+  'settings.search': {
+    plain: 'Find passages in your notes by meaning. Everything runs on this computer.',
+    flavoured: 'I find passages by meaning, sugar, and none of it ever leaves this computer.'
+  },
   'setup.watch': {
     plain: 'Which folder do your recordings go to?',
     flavoured: "Which folder do your recordings land in? I'll keep an eye on it."

@@ -2,7 +2,14 @@ import { EventEmitter } from 'events'
 import { watch, type FSWatcher } from 'fs'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import type { AppState, GoogleState, LiveState, Settings, WorkerStatus } from '@shared/api'
+import type {
+  AppState,
+  GoogleState,
+  LiveState,
+  SearchStatus,
+  Settings,
+  WorkerStatus
+} from '@shared/api'
 import type { HelloEvent, StageEvent, VideoEntry, WorkerMessage } from '@shared/protocol'
 import { engineProblem, isSetupDone, loadGoogleAccount, saveGoogleAccount } from './settings'
 
@@ -18,6 +25,8 @@ const BROADCAST_MS = 100
 export class State extends EventEmitter {
   hello: HelloEvent | null = null
   videos: Record<string, VideoEntry> = {}
+  /** The library `videos` came from (a worker snapshot or index.json), or null before either arrived. */
+  videosLibrary: string | null = null
   live: LiveState = { progress: {}, settling: {} }
   lastLoginRequired: AppState['lastLoginRequired'] = null
   worker: WorkerStatus = {
@@ -39,6 +48,13 @@ export class State extends EventEmitter {
   setupDone = isSetupDone()
   google: GoogleState = { account: loadGoogleAccount(), needsSignin: false }
   signinRunning = false
+  search: SearchStatus = {
+    keyword: { meetings: 0, passages: 0 },
+    smart: { phase: 'off' },
+    readOnly: false,
+    modelOnDisk: false,
+    diskBytes: 0
+  }
 
   constructor(public settings: Settings) {
     super()
@@ -61,7 +77,8 @@ export class State extends EventEmitter {
       setupNeeded: this.setupNeeded,
       google: this.google,
       signinRunning: this.signinRunning,
-      lastLoginRequired: this.lastLoginRequired
+      lastLoginRequired: this.lastLoginRequired,
+      search: this.search
     }
   }
 
@@ -89,6 +106,12 @@ export class State extends EventEmitter {
     this.changed()
   }
 
+  /** From the SearchService (SS·T13), which throttles its progress updates itself. */
+  setSearch(search: SearchStatus): void {
+    this.search = search
+    this.changed()
+  }
+
   setSigninRunning(running: boolean): void {
     this.signinRunning = running
     this.changed()
@@ -109,6 +132,7 @@ export class State extends EventEmitter {
         break
       case 'snapshot':
         this.videos = event.videos
+        this.videosLibrary = this.hello?.library ?? null
         break
       case 'video': {
         this.videos = { ...this.videos, [event.key]: event.entry }
@@ -213,6 +237,7 @@ export class State extends EventEmitter {
       const data = JSON.parse(await readFile(join(library, 'index.json'), 'utf-8'))
       if (this.worker.connection === 'up') return // the worker took over meanwhile; its snapshot wins
       this.videos = data?.videos ?? {}
+      this.videosLibrary = library
       this.changed()
     } catch {
       // Missing or half-written: keep what we have; the watcher fires again after the rename.

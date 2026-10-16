@@ -12,6 +12,8 @@ export default defineConfig(
       '**/node_modules',
       '**/dist',
       '**/out',
+      // Engine build venv and PyInstaller output (multi-MB Playwright bundles); not our source.
+      'engine',
       'src/renderer/src/components/ui',
       'src/renderer/src/hooks'
     ]

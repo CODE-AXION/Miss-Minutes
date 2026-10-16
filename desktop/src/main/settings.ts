@@ -51,7 +51,9 @@ export function defaultSettings(
     startHidden: true,
     notify: { done: true, failedFinal: true, everyFailure: false },
     theme: 'system',
-    voice: true
+    voice: true,
+    // Not an engine argument (toArgs), so toggling it never restarts the worker (SS·T12).
+    smartSearch: false
   }
 }
 
