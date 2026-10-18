@@ -14,6 +14,7 @@ import type {
   WorkerStateName
 } from './protocol'
 import type { ChunkType } from './chunker'
+import type { MediaInfo } from './media'
 
 // --- Settings (electron-store; defaults mirror argparse, see 05·T1) ------------------------
 
@@ -230,6 +231,8 @@ export interface MissMinutesApi {
   getWorkerLog(): Promise<LogLine[]>
   /** Resolved by main from the entry for `key`, never from a raw renderer path. */
   openPath(kind: OpenPathKind, key?: string): Promise<void>
+  /** Which playable files exist for the entry (resolved by main, never from a renderer path). */
+  mediaInfo(key: string): Promise<MediaInfo>
 
   getSettings(): Promise<Settings>
   saveSettings(patch: Partial<Settings>, options: { restart: RestartMode }): Promise<Settings>
@@ -299,6 +302,7 @@ export const IPC = {
   readHandbrakeLog: 'files:read-hb-log',
   getWorkerLog: 'worker:log',
   openPath: 'files:open',
+  mediaInfo: 'media:info',
   getSettings: 'settings:get',
   saveSettings: 'settings:save',
   pickFolder: 'dialog:pick-folder',

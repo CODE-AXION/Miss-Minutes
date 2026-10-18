@@ -124,6 +124,21 @@
     font-size: 0.85em;
     white-space: nowrap;
   }
+  /* Each clock in a timestamp plays the video from there (NV·T11) */
+  & .note-ts-jump {
+    all: unset;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 45%, transparent);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 1px;
+    }
+  }
   /* The section a search result opened (SS·T24) */
   & h2.note-flash {
     border-radius: var(--radius-sm);

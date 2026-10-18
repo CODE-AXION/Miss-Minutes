@@ -5,6 +5,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { IPC, type NavigateRequest, type RestartMode, type Settings } from '@shared/api'
 import { voice } from '@shared/voice'
 import { registerIpc } from './ipc'
+import { handleMedia, registerMediaScheme } from './media'
 import { Notifier } from './notify'
 import {
   loadSettings,
@@ -27,6 +28,9 @@ import icon from '../../resources/icon.png?asset'
 // One app instance = one worker = one writer of index.json (the worker lock also guards against the CLI).
 const primary = app.requestSingleInstanceLock()
 if (!primary) app.exit(0)
+
+// Note playback streams recordings over mm-media:// (NV·T4); privileges must be set before app ready.
+registerMediaScheme()
 
 /** resources/ next to the app; electron-builder unpacks it from the asar (asarUnpack). */
 const resourcesDir = join(__dirname, '../../resources').replace('app.asar', 'app.asar.unpacked')
@@ -255,6 +259,11 @@ app.whenReady().then(() => {
     quit: () => quitApp()
   })
 
+  handleMedia(
+    () => state.videos,
+    () => state.settings.library,
+    (text) => log.add('app', text)
+  )
   createWindow()
 
   const command = (cmd: 'pause' | 'resume' | 'scan_now'): void => {

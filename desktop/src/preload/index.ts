@@ -24,6 +24,7 @@ const api: MissMinutesApi = {
   readHandbrakeLog: (key) => ipcRenderer.invoke(IPC.readHandbrakeLog, key),
   getWorkerLog: () => ipcRenderer.invoke(IPC.getWorkerLog),
   openPath: (kind, key) => ipcRenderer.invoke(IPC.openPath, kind, key),
+  mediaInfo: (key) => ipcRenderer.invoke(IPC.mediaInfo, key),
 
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
   saveSettings: (patch, options) => ipcRenderer.invoke(IPC.saveSettings, patch, options),

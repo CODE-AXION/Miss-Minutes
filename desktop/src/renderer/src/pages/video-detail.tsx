@@ -475,10 +475,12 @@ export function VideoDetailPage(): JSX.Element | null {
         <TabsContent value="notes">
           {entry.notes && (
             <Notes
+              key={key}
               entryKey={key}
               notes={entry.notes}
               version={entry.updated}
               focusSection={params.get('section')}
+              playable={entry.status === 'done'}
             />
           )}
         </TabsContent>

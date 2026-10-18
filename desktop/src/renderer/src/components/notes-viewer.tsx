@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type JSX, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type JSX, type ReactNode } from 'react'
 import Markdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Copy, ExternalLink } from 'lucide-react'
@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MermaidBlock } from '@/components/mermaid-block'
+import { VideoPanel, type Jump } from '@/components/video-panel'
+import { formatClock } from '@/lib/format'
 import { copyText } from '@/store'
 import { slug } from '@shared/slug'
+import { splitRun, TIMESTAMP } from '@shared/timestamps'
 
 /**
  * The note without its YAML front matter (already shown in the page header) and leading `# Title` line. Line endings
@@ -23,6 +26,7 @@ function noteBody(text: string): string {
 }
 
 // --- [MM:SS] timestamps: a tiny remark plugin that wraps them in <mark class="note-ts"> ----------------------
+// Each clock inside the mark is a <button class="note-ts-jump" data-t="<seconds>"> (NV·T9); the visible text is unchanged.
 
 interface MdNode {
   type: string
@@ -31,10 +35,27 @@ interface MdNode {
   data?: Record<string, unknown>
 }
 
-/** "[36:15]", "[1:02:03]", "[38:40, 39:37]". */
-const TIMESTAMP = /\[\d{1,2}:\d{2}(?::\d{2})?(?:\s*[,–-]\s*\d{1,2}:\d{2}(?::\d{2})?)*\]/g
+/** hast children of a timestamp mark: its clocks as jump buttons, brackets and separators as plain text. */
+function jumpButtons(run: string): HastNode[] {
+  return splitRun(run).map(({ text, seconds }) =>
+    seconds === null
+      ? { type: 'text', value: text }
+      : {
+          type: 'element',
+          tagName: 'button',
+          properties: {
+            type: 'button',
+            className: ['note-ts-jump'],
+            dataT: String(seconds),
+            ariaLabel: `Play video at ${formatClock(seconds)}`
+          },
+          children: [{ type: 'text', value: text }]
+        }
+  )
+}
 
-function splitTimestamps(node: MdNode): MdNode[] {
+/** `buttons` is false inside links, where a <button> would be nested interactive content. */
+function splitTimestamps(node: MdNode, buttons: boolean): MdNode[] {
   const value = node.value ?? ''
   const parts: MdNode[] = []
   let last = 0
@@ -43,7 +64,11 @@ function splitTimestamps(node: MdNode): MdNode[] {
     parts.push({
       type: 'text',
       value: match[0],
-      data: { hName: 'mark', hProperties: { className: ['note-ts'] } }
+      data: {
+        hName: 'mark',
+        hProperties: { className: ['note-ts'] },
+        ...(buttons && { hChildren: jumpButtons(match[0]) })
+      }
     })
     last = match.index + match[0].length
   }
@@ -52,11 +77,12 @@ function splitTimestamps(node: MdNode): MdNode[] {
   return parts
 }
 
-function wrapTimestamps(node: MdNode): void {
+function wrapTimestamps(node: MdNode, inLink = false): void {
   if (!node.children) return
+  const link = inLink || node.type === 'link' || node.type === 'linkReference'
   node.children = node.children.flatMap((child) => {
-    if (child.type === 'text') return splitTimestamps(child)
-    wrapTimestamps(child)
+    if (child.type === 'text') return splitTimestamps(child, !link)
+    wrapTimestamps(child, link)
     return [child]
   })
 }
@@ -71,7 +97,7 @@ interface HastNode {
   type: string
   value?: string
   tagName?: string
-  properties?: { className?: unknown }
+  properties?: { className?: unknown } & Record<string, unknown>
   children?: HastNode[]
 }
 
@@ -134,13 +160,16 @@ interface TocItem {
 /**
  * The note of a done video (07·T3): front matter stripped, GFM tables, Mermaid diagrams, highlighted [MM:SS]
  * timestamps and a table of contents from the `##` headings. No raw HTML (react-markdown's default). Plain card
- * style, no scanlines, so long documents stay readable.
+ * style, no scanlines, so long documents stay readable. Each clock in a timestamp is a button; one delegated click
+ * handler on the article reports it (NV·T10). Timestamps are buttons that open the docked video panel at that
+ * moment (NV·T12); it takes the Contents column's place while open.
  */
 export function NotesViewer({
   entryKey,
   notes,
   version,
-  focusSection
+  focusSection,
+  playable
 }: {
   entryKey: string
   /** The entry's `notes` path (relative to the library). */
@@ -149,11 +178,26 @@ export function NotesViewer({
   version: string | undefined
   /** Heading id to open at (`?section=` from a search result, SS·T24); unknown ids leave the note at the top. */
   focusSection?: string | null
+  /** The entry is `done`: when it stops being so (reprocess), the video panel closes and releases the file. */
+  playable: boolean
 }): JSX.Element {
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [toc, setToc] = useState<TocItem[]>([])
   const article = useRef<HTMLElement>(null)
+  // The docked video panel (NV·T12): null is closed; the nonce makes a repeat click on one timestamp seek again.
+  const [jump, setJump] = useState<Jump | null>(null)
+  const onJump = (seconds: number): void =>
+    setJump((j) => ({ seconds, nonce: (j?.nonce ?? 0) + 1 }))
+  const closeVideo = useCallback(() => setJump(null), [])
+
+  // Reprocess (the entry leaves `done`) or a rewritten note (a new `version`) closes the panel; adjusted while
+  // rendering rather than in an effect, so the stale panel never paints.
+  const [seen, setSeen] = useState({ playable, version })
+  if (seen.playable !== playable || seen.version !== version) {
+    setSeen({ playable, version })
+    if (!playable || seen.version !== version) setJump(null)
+  }
 
   useEffect(() => {
     let live = true
@@ -217,7 +261,16 @@ export function NotesViewer({
     )
   else
     body = (
-      <article ref={article} className="note-markdown">
+      <article
+        ref={article}
+        className="note-markdown"
+        onClick={(e) => {
+          const button = (e.target as HTMLElement).closest<HTMLButtonElement>('button.note-ts-jump')
+          if (!button) return
+          const t = Number(button.dataset.t)
+          if (Number.isFinite(t)) onJump(t)
+        }}
+      >
         <Markdown remarkPlugins={[remarkGfm, remarkTimestamps]} components={COMPONENTS}>
           {text}
         </Markdown>
@@ -254,26 +307,30 @@ export function NotesViewer({
           {body}
         </CardContent>
       </Card>
-      {toc.length > 0 && (
-        <nav
-          aria-label="Contents"
-          className="sticky top-0 hidden w-56 shrink-0 flex-col gap-1 text-sm xl:flex"
-        >
-          <span className="mb-1 text-xs tracking-wide text-muted-foreground uppercase">
-            Contents
-          </span>
-          {toc.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className="truncate rounded px-2 py-1 text-left hover:bg-muted"
-              title={item.text}
-              onClick={() => scrollToId(item.id)}
-            >
-              {item.text}
-            </button>
-          ))}
-        </nav>
+      {jump ? (
+        <VideoPanel entryKey={entryKey} version={version} jump={jump} onClose={closeVideo} />
+      ) : (
+        toc.length > 0 && (
+          <nav
+            aria-label="Contents"
+            className="sticky top-0 hidden w-56 shrink-0 flex-col gap-1 text-sm xl:flex"
+          >
+            <span className="mb-1 text-xs tracking-wide text-muted-foreground uppercase">
+              Contents
+            </span>
+            {toc.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="truncate rounded px-2 py-1 text-left hover:bg-muted"
+                title={item.text}
+                onClick={() => scrollToId(item.id)}
+              >
+                {item.text}
+              </button>
+            ))}
+          </nav>
+        )
       )}
     </div>
   )

@@ -8,6 +8,7 @@ import {
 } from '@shared/api'
 import type { Ack, CommandInput, CommandName } from '@shared/protocol'
 import { openPath, readHandbrakeLog, readNote } from './files'
+import { mediaInfo } from './media'
 import { join } from 'path'
 import { DEFAULT_PROJECT_ROOT, validateRoot } from './settings'
 import type { SearchService } from './search/service'
@@ -114,6 +115,10 @@ export function registerIpc(ctx: IpcContext): void {
   handle(IPC.openPath, (kind: OpenPathKind, key?: string) => {
     if (!OPEN_KINDS.has(kind)) throw new Error(`Unknown kind: ${kind}`)
     return openPath(settings(), kind, key ? ctx.state.videos[key] : undefined)
+  })
+  handle(IPC.mediaInfo, (key: string) => {
+    if (!(key in ctx.state.videos)) throw new Error('Unknown video')
+    return mediaInfo(ctx.state.videos, settings().library, key)
   })
 
   handle(IPC.getSettings, () => settings())
