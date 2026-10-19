@@ -80,6 +80,10 @@ const LINES = {
     plain: 'A recording is in progress. Stop, save and quit?',
     flavoured: "We're still recording, sugar. Stop, save and quit?"
   },
+  'update.ready': {
+    plain: 'Miss Minutes {version} is ready. Restart to update.',
+    flavoured: 'A fresh version ({version}) is ready, sugar. Restart and I will be all set.'
+  },
   'tray.closed': {
     plain: 'Still running in the tray',
     flavoured: "Still running in the tray — I'll keep an eye on the timeline while you're away!"

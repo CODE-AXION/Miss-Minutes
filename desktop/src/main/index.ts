@@ -9,6 +9,7 @@ import { handleMedia, registerMediaScheme } from './media'
 import { Notifier } from './notify'
 import { RecordingService } from './recording'
 import { RecordingToolbar } from './toolbar'
+import { Updater } from './updates'
 import {
   loadSettings,
   markSetupDone,
@@ -48,6 +49,7 @@ let tray: AppTray | null = null
 let notifier: Notifier | null = null
 let recording: RecordingService | null = null
 let toolbar: RecordingToolbar | null = null
+let updater: Updater | null = null
 let isQuitting = false
 /** The state changed while the window was hidden: send it on the next show. */
 let stateDirty = false
@@ -268,7 +270,7 @@ async function finishSetup(patch: Partial<Settings>): Promise<void> {
  * Tray Quit / the app's Quit: ask first while recording or while a video is being processed, then save the recording
  * (RC·T15) and end the worker and the app.
  */
-async function quitApp({ confirm = true } = {}): Promise<void> {
+async function quitApp({ confirm = true, relaunch = false } = {}): Promise<void> {
   if (isQuitting) return
   if (confirm && recording?.busy) {
     const { response } = await dialog.showMessageBox({
@@ -301,9 +303,23 @@ async function quitApp({ confirm = true } = {}): Promise<void> {
     supervisor.shutdownForQuit(),
     search.dispose().catch((error: Error) => log.add('app', `search: ${error.message}`))
   ])
+  updater?.dispose()
   await log.flush()
   tray?.destroy()
-  app.exit(0)
+  // A downloaded update installs on the way out (UP·T3); app.exit would skip the updater's own quit hook.
+  if (updater?.ready) updater.installOnQuit(relaunch)
+  else app.exit(0)
+}
+
+/** Restart to update (UP·T3): never mid-recording or mid-video; otherwise the usual clean quit, then the installer. */
+async function installUpdate(): Promise<void> {
+  if (!updater?.ready) throw new Error('No update is ready yet')
+  if (recording?.busy) throw new Error('Stop the recording first, then restart to update')
+  if (supervisor.busy)
+    throw new Error(
+      'A video is being processed. Restart once it is done, or the update installs the next time Miss Minutes quits.'
+    )
+  await quitApp({ confirm: false, relaunch: true })
 }
 
 app.on('second-instance', () => showWindow())
@@ -330,6 +346,13 @@ app.whenReady().then(() => {
     (key) => navigate({ to: 'video', key }),
     () => navigate({ to: 'signin' })
   )
+  updater = new Updater(
+    state,
+    notifier,
+    (text) => log.add('app', text),
+    () => state.settings
+  )
+  updater.install = installUpdate
   const uploads = new Uploads(
     state,
     supervisor,
@@ -370,6 +393,8 @@ app.whenReady().then(() => {
     tasks,
     search,
     recording,
+    updater,
+    installUpdate,
     window: () => mainWindow,
     saveSettings: updateSettings,
     finishSetup,
@@ -396,8 +421,13 @@ app.whenReady().then(() => {
     openLibrary: () => void shell.openPath(state.settings.library),
     toggleRecording: () => recording?.toggle(),
     toggleMicMuted: () => recording?.toggleMicMuted(),
+    installUpdate: () =>
+      void installUpdate().catch((error: Error) =>
+        dialog.showErrorBox('Miss Minutes', error.message)
+      ),
     quit: () => void quitApp()
   })
+  updater.start()
 
   // The library shows right away (read-only); the worker's snapshot replaces it once it is up.
   state.watchIndex(state.settings.library)

@@ -14,6 +14,7 @@ import {
 import { HealthCard } from '@/components/health-card'
 import { GoogleAccountCard } from '@/components/settings/google-account'
 import { RecordingSettings } from '@/components/settings/recording'
+import { UpdateSettings } from '@/components/settings/updates'
 import { SmartSearchSettings } from '@/components/settings/smart-search'
 import {
   AiStudioSection,
@@ -129,6 +130,7 @@ export function SettingsPage(): JSX.Element | null {
         <AppSection {...props} rootError={rootError} />
         <NotificationsSection {...props} />
       </div>
+      <UpdateSettings state={state} version={version} />
       {version && (
         <p className="text-center text-xs text-muted-foreground">
           Miss Minutes {version} · Video compression by{' '}

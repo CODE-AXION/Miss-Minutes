@@ -115,7 +115,20 @@ export interface AppState {
   search: SearchStatus
   /** The in-app recorder (RC·T10); never anything but `idle` without a visible indicator. */
   recording: RecordingStatus
+  /** App updates from GitHub Releases (UP·T2). */
+  update: UpdateStatus
 }
+
+/**
+ * off = not an installed build (development), so nothing is checked. A downloaded update installs on Restart, or
+ * by itself the next time the app quits (UP·T2).
+ */
+export type UpdateStatus =
+  | { phase: 'off' }
+  | { phase: 'idle'; checkedAt: string | null; error?: string }
+  | { phase: 'checking' }
+  | { phase: 'downloading'; version: string; percent: number }
+  | { phase: 'ready'; version: string }
 
 /** Smart search (SS·T13): the keyword index is always there; the semantic layer is opt-in. */
 export interface SearchStatus {
@@ -300,6 +313,14 @@ export interface MissMinutesApi {
     rebuild(): Promise<void>
   }
 
+  /** App updates (UP·T2); progress arrives in `AppState.update`. */
+  updates: {
+    /** Looks for a newer release now (Settings); a found one downloads in the background. */
+    check(): Promise<void>
+    /** Quits and installs the downloaded update, then reopens; refused while recording or processing. */
+    install(): Promise<void>
+  }
+
   /** In-app recording (RC·T10); progress arrives in `AppState.recording`. Main picks the folder and the name. */
   recording: {
     /** Screens and windows with thumbnails, plus free space in the watch folder and the last choice. */
@@ -363,6 +384,8 @@ export const IPC = {
   recordingStart: 'recording:start',
   recordingStop: 'recording:stop',
   recordingMute: 'recording:mute',
+  updatesCheck: 'updates:check',
+  updatesInstall: 'updates:install',
   // push
   state: 'state:changed',
   log: 'worker:log-lines',

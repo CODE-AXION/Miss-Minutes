@@ -55,6 +55,10 @@ const api: MissMinutesApi = {
     rebuild: () => ipcRenderer.invoke(IPC.searchRebuild)
   },
 
+  updates: {
+    check: () => ipcRenderer.invoke(IPC.updatesCheck),
+    install: () => ipcRenderer.invoke(IPC.updatesInstall)
+  },
   recording: {
     sources: () => ipcRenderer.invoke(IPC.recordingSources),
     start: (choice) => ipcRenderer.invoke(IPC.recordingStart, choice),

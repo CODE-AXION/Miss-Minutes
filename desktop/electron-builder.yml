@@ -51,9 +51,16 @@ nsis:
   runAfterFinish: true
   installerIcon: resources/icon.ico
   uninstallerIcon: resources/icon.ico
-  artifactName: ${productName} Setup ${version}.${ext}
+  # No spaces: GitHub turns them into dots on upload, and latest.yml (the updater's manifest) names this file (UP·T1).
+  artifactName: Miss-Minutes-Setup-${version}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   # Uninstall shortcut, autostart cleanup and the optional delete-library / delete-settings questions.
   include: build/installer.nsh
+# Auto-update (UP·T1): electron-updater reads latest.yml from the newest GitHub release. Each release must carry
+# the installer, its .blockmap and latest.yml (all three are in dist/ after `npm run dist`).
+publish:
+  provider: github
+  owner: CODE-AXION
+  repo: Miss-Minutes
 npmRebuild: false

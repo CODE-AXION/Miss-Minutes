@@ -8,6 +8,7 @@ import type {
   LiveState,
   SearchStatus,
   Settings,
+  UpdateStatus,
   WorkerStatus
 } from '@shared/api'
 import type { HelloEvent, StageEvent, VideoEntry, WorkerMessage } from '@shared/protocol'
@@ -57,6 +58,7 @@ export class State extends EventEmitter {
     diskBytes: 0
   }
   recording: RecordingStatus = { phase: 'idle' }
+  update: UpdateStatus = { phase: 'off' }
 
   constructor(public settings: Settings) {
     super()
@@ -81,7 +83,8 @@ export class State extends EventEmitter {
       signinRunning: this.signinRunning,
       lastLoginRequired: this.lastLoginRequired,
       search: this.search,
-      recording: this.recording
+      recording: this.recording,
+      update: this.update
     }
   }
 
@@ -116,6 +119,11 @@ export class State extends EventEmitter {
   }
 
   /** From the RecordingService (RC·T10), which throttles its byte counter itself. */
+  setUpdate(update: UpdateStatus): void {
+    this.update = update
+    this.changed()
+  }
+
   setRecording(recording: RecordingStatus): void {
     this.recording = recording
     this.changed()

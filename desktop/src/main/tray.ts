@@ -28,6 +28,8 @@ export interface TrayActions {
   toggleRecording(): void
   /** Mute/unmute the mic in the running recording (RC·T27). */
   toggleMicMuted(): void
+  /** Quit and install the downloaded update, then reopen (UP·T3). */
+  installUpdate(): void
   quit(): void
 }
 
@@ -191,7 +193,17 @@ export class AppTray {
     // null = no mic in this recording, so no Mute item.
     const micMuted =
       recording.phase === 'recording' && recording.audio.mic === 'on' ? recording.micMuted : null
-    const signature = JSON.stringify([label, up, worker.paused, phase, canRecord, micMuted])
+    const { update } = this.state
+    const updateReady = update.phase === 'ready' ? update.version : null
+    const signature = JSON.stringify([
+      label,
+      up,
+      worker.paused,
+      phase,
+      canRecord,
+      micMuted,
+      updateReady
+    ])
     if (signature === this.menuSignature) return
     this.menuSignature = signature
     const { actions } = this
@@ -224,6 +236,14 @@ export class AppTray {
         { label: 'Scan now', enabled: up, click: () => actions.scanNow() },
         { label: 'Open library folder', click: () => actions.openLibrary() },
         { type: 'separator' },
+        ...(updateReady
+          ? [
+              {
+                label: `Restart to update (${updateReady})`,
+                click: () => actions.installUpdate()
+              }
+            ]
+          : []),
         { label: 'Quit', click: () => actions.quit() }
       ])
     )

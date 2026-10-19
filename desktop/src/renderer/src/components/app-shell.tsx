@@ -5,6 +5,7 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { RecordDialog } from '@/components/recording/record-dialog'
 import { openRecordDialog } from '@/components/recording/record-request'
 import { RecordControl } from '@/components/recording/record-control'
+import { UpdateNotice } from '@/components/update-notice'
 import { SigninDialog } from '@/components/signin/signin-dialog'
 import { openSignin } from '@/components/signin/signin-request'
 import { WindowDropOverlay } from '@/components/upload-dropzone'
@@ -51,6 +52,7 @@ export function AppShell(): JSX.Element {
       <SidebarInset className="retro-grid min-h-0 overflow-hidden">
         {/* The one in-app place for recording (RC·T28): Record, or the live REC pill with Mute and Stop. */}
         <header className="flex h-10 shrink-0 items-center gap-3 border-b border-border bg-background/85 pr-10 pl-6 backdrop-blur">
+          <UpdateNotice />
           <RecordControl />
         </header>
         <WorkerBanner />

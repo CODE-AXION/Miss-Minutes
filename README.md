@@ -14,6 +14,7 @@ Record the meeting from Miss Minutes itself, or with any recorder you already us
 - **An organised library.** Notes are filed by category and tags. Filter, group, edit, reprocess, or delete meetings (one or many at once, to the Recycle Bin).
 - **Search your notes.** Full-text search, plus optional smart search by meaning that runs entirely on your PC.
 - **Runs quietly in the background.** From the system tray, starting with Windows: failures are retried, and a notification tells you when notes are ready.
+- **Updates itself.** New versions download in the background; restart to install, or it installs the next time you quit.
 - **Your data stays yours.** The library lives on your PC; recordings are only sent to your own Google AI Studio account to write the notes.
 
 ![Dashboard](docs/images/dashboard.png)
@@ -102,6 +103,10 @@ You can change every choice later in **Settings**.
 ## Using Miss Minutes
 
 Day to day there is nothing to do: record your meeting (in Miss Minutes or with your usual recorder), and the notes appear a few minutes after the recording ends.
+
+### Updates
+
+Miss Minutes checks GitHub for a new version when it starts and every few hours, and downloads it in the background. When it is ready, the header shows **Update … ready · Restart**, the tray menu offers **Restart to update**, and a notification tells you. It never restarts during a recording or while a video is being processed; if you ignore it, the update installs the next time Miss Minutes quits. Your library and settings are kept.
 
 ### The tray icon
 
@@ -251,6 +256,7 @@ The live engine log, with search and tag filters. This is the first place to loo
 - **Smart search:** turn meaning-based search on or off, watch the download and indexing, **Retry** after a failure, **Rebuild index**, and delete the downloaded files. It takes effect right away (no Save) and never restarts the engine.
 - **App:** the library folder, start at Windows login, start hidden, Miss Minutes' voice (the playful messages), theme (light *Office* or dark *CRT*), and developer mode.
 - **Notifications:** choose which notifications you get: notes ready, final failure, every failure.
+- **Updates:** the version you run, **Check for updates**, and **Restart to update** once a new version is downloaded.
 
 Changing a setting restarts the engine: after the current video by default, or right away if you choose.
 
@@ -354,9 +360,15 @@ The desktop app (Electron + React) lives in [`desktop/`](desktop/README.md). The
 ```bash
 cd desktop
 npm install
-npm run dist       # engine (PyInstaller) + app + installer -> desktop/dist/Miss Minutes Setup <version>.exe
+npm run dist       # engine (PyInstaller) + app + installer -> desktop/dist/Miss-Minutes-Setup-<version>.exe
 npm run dist:app   # app + installer only, reusing the last engine build
 ```
+
+**Release a version** (the app updates itself from GitHub Releases):
+
+1. Bump `version` in `desktop/package.json`, then `npm run dist`.
+2. Create a GitHub release tagged `v<version>` and upload **all three** files from `desktop/dist/`: `Miss-Minutes-Setup-<version>.exe`, its `.exe.blockmap`, and `latest.yml`. Installed apps read `latest.yml` from the newest release, so without it nobody is offered the update.
+3. Publish it (not as a draft or pre-release). Running apps find it within 4 hours, or at once with **Settings → Updates → Check for updates**.
 
 **Run in development:** `cd desktop && npm run dev`.
 

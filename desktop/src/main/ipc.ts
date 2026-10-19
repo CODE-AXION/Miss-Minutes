@@ -11,6 +11,7 @@ import { openPath, readHandbrakeLog, readNote, trashMeetingFiles } from './files
 import { mediaInfo } from './media'
 import { join } from 'path'
 import type { RecordingService } from './recording'
+import type { Updater } from './updates'
 import { DEFAULT_PROJECT_ROOT, validateRoot } from './settings'
 import type { SearchService } from './search/service'
 import { inspectLibrary, type EngineTasks } from './setup'
@@ -26,6 +27,9 @@ export interface IpcContext {
   tasks: EngineTasks
   search: SearchService
   recording: RecordingService
+  updater: Updater
+  /** Restart to update: refused while recording or processing (UP·T3). */
+  installUpdate(): Promise<void>
   window(): BrowserWindow | null
   saveSettings(patch: Partial<Settings>, restart: RestartMode): Promise<Settings>
   finishSetup(patch: Partial<Settings>): Promise<void>
@@ -224,6 +228,8 @@ export function registerIpc(ctx: IpcContext): void {
   handle(IPC.recordingSources, () => ctx.recording.sources())
   handle(IPC.recordingStart, (choice: unknown) => ctx.recording.start(choice))
   handle(IPC.recordingStop, () => ctx.recording.stop('user'))
+  handle(IPC.updatesCheck, () => ctx.updater.check())
+  handle(IPC.updatesInstall, () => ctx.installUpdate())
   handle(IPC.recordingMute, (muted: unknown) => ctx.recording.setMicMuted(muted === true))
 
   handle(IPC.quit, () => ctx.quit())
