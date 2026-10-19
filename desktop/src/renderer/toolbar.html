@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Miss Minutes recording</title>
+    <!-- The floating REC pill (RC·T29): no images, no fonts, nothing remote. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'"
+    />
+  </head>
+
+  <body>
+    <div class="pill" id="pill">
+      <span class="dot"></span>
+      <span class="label" id="label">REC</span>
+      <button type="button" id="mute" class="btn" hidden></button>
+      <button type="button" id="stop" class="btn" title="Stop recording">
+        <span class="square"></span>Stop
+      </button>
+    </div>
+    <script type="module" src="/src/toolbar/main.ts"></script>
+  </body>
+</html>

@@ -19,7 +19,19 @@ export default defineConfig({
     }
   },
   preload: {
-    resolve: { alias: shared }
+    resolve: { alias: shared },
+    // The hidden recorder window has its own preload (out/preload/recorder.js) (RC·T6). A sandboxed preload can't
+    // require() a split chunk, so the two must share no runtime import (see RECORDER_IPC).
+    build: {
+      rollupOptions: {
+        input: {
+          index: 'src/preload/index.ts',
+          recorder: 'src/preload/recorder.ts',
+          // The recording mini-toolbar (RC·T29), sandboxed like the recorder.
+          toolbar: 'src/preload/toolbar.ts'
+        }
+      }
+    }
   },
   renderer: {
     resolve: {
@@ -29,6 +41,16 @@ export default defineConfig({
         ...shared
       }
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss()],
+    // The hidden recorder window is a second, React-free page (out/renderer/recorder.html) (RC·T6).
+    build: {
+      rollupOptions: {
+        input: {
+          index: resolve('src/renderer/index.html'),
+          recorder: resolve('src/renderer/recorder.html'),
+          toolbar: resolve('src/renderer/toolbar.html')
+        }
+      }
+    }
   }
 })

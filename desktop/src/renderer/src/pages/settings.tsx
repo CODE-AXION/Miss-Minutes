@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { HealthCard } from '@/components/health-card'
 import { GoogleAccountCard } from '@/components/settings/google-account'
+import { RecordingSettings } from '@/components/settings/recording'
 import { SmartSearchSettings } from '@/components/settings/smart-search'
 import {
   AiStudioSection,
@@ -39,8 +40,18 @@ export function SettingsPage(): JSX.Element | null {
   const [formKey, setFormKey] = useState(0)
 
   const saved = state?.settings
-  // smartSearch is saved at once by its own card (SS·T26): never part of the draft, so Save can't revert it.
-  const current = draft && saved ? { ...draft, smartSearch: saved.smartSearch } : saved
+  // smartSearch and the hotkeys are saved at once by their own cards (SS·T26, RC·T25): never part of the draft,
+  // so Save can't revert them.
+  const current =
+    draft && saved
+      ? {
+          ...draft,
+          smartSearch: saved.smartSearch,
+          recordHotkey: saved.recordHotkey,
+          muteHotkey: saved.muteHotkey,
+          recordingToolbar: saved.recordingToolbar
+        }
+      : saved
 
   const onValidity = useCallback((id: string, valid: boolean) => {
     setInvalid((set) => {
@@ -110,6 +121,7 @@ export function SettingsPage(): JSX.Element | null {
       <HealthCard state={state} />
       <div key={formKey} className="contents">
         <WatchingSection {...props} />
+        <RecordingSettings state={state} />
         <CompressionSection {...props} />
         <GoogleAccountCard state={state} />
         <AiStudioSection {...props} />

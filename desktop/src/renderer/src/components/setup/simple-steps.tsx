@@ -14,7 +14,7 @@ export function RecordingsStep({ state, draft, update }: StepProps): JSX.Element
         id="setupWatchDir"
         label="Recordings folder"
         kind="folder"
-        description="Point this at the folder OBS saves recordings to. New recordings there are picked up automatically."
+        description="Recordings made in Miss Minutes are saved here. If you also use OBS, choose the folder OBS saves to. New recordings here are picked up automatically."
         value={draft.watchDir}
         error={draft.watchDir.trim() ? undefined : 'Choose a folder'}
         onChange={(watchDir) => update({ watchDir })}

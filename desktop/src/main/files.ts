@@ -1,4 +1,5 @@
 import { shell } from 'electron'
+import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { basename, extname, join, resolve, sep } from 'path'
 import type { OpenPathKind, Settings } from '@shared/api'
@@ -23,6 +24,38 @@ export function readNote(settings: Settings, relPath: string): Promise<string> {
 }
 
 const stem = (file: string): string => basename(file, extname(file))
+
+/**
+ * Delete (DM·T1): moves a meeting's note to the Recycle Bin, and with `video` its recording and compressed copy too.
+ * Paths come from the entry, never from the renderer; the note and the compressed copy must sit inside the library.
+ * Stops at the first file that can't be moved (e.g. open in another app) and says which.
+ */
+export async function trashMeetingFiles(
+  settings: Settings,
+  key: string,
+  entry: VideoEntry,
+  video: boolean
+): Promise<void> {
+  const files = new Set<string>()
+  if (entry.notes)
+    files.add(inside(join(settings.library, 'notes'), resolve(settings.library, entry.notes)))
+  if (video) {
+    files.add(resolve(key))
+    const compressedDir = join(settings.library, 'compressed')
+    if (entry.compressed) files.add(inside(compressedDir, resolve(entry.compressed)))
+    files.add(inside(compressedDir, `${stem(key)}.mp4`))
+  }
+  for (const file of files) {
+    if (!existsSync(file)) continue
+    try {
+      await shell.trashItem(file)
+    } catch (error) {
+      throw new Error(
+        `Could not move ${basename(file)} to the Recycle Bin: ${(error as Error).message}`
+      )
+    }
+  }
+}
 
 /** library/logs/<source stem>.handbrake.log, the name compress() writes (watcher.py). */
 function handbrakeLogPath(settings: Settings, key: string): string {

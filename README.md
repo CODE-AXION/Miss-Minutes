@@ -4,7 +4,7 @@
 
 Miss Minutes turns your meeting recordings into searchable meeting notes, automatically.
 
-It watches the folder your recordings are saved to (for example OBS's `Videos` folder). Each new recording is compressed, uploaded to Google AI Studio and turned into a Markdown note with an overview, topics, decisions, action items and diagrams. The note is then filed in your library by category and tags. Everything runs on your own PC, in the background, from the system tray.
+Record the meeting from Miss Minutes itself, or with any recorder you already use (for example OBS): it watches the folder your recordings are saved to. Each new recording is compressed, uploaded to Google AI Studio and turned into a Markdown note with an overview, topics, decisions, action items and diagrams. The note is then filed in your library by category and tags. Everything runs on your own PC, in the background, from the system tray.
 
 ![Dashboard](docs/images/dashboard.png)
 
@@ -37,7 +37,7 @@ flowchart LR
     F --> G[Toast:<br/>Notes ready]
 ```
 
-1. **Detect.** Every 60 s Miss Minutes scans the recordings folder. A new file waits until it stops changing for 2 minutes, so a recording still in progress is never picked up.
+1. **Detect.** Every 60 s Miss Minutes scans the recordings folder. A new file waits until it stops changing for 2 minutes, so a recording still in progress is never picked up. A meeting recorded in Miss Minutes itself skips the wait: it is queued, first, the moment you stop it.
 2. **Compress.** HandBrake shrinks the video (often to 20–40 % of its size), so the upload is fast.
 3. **Generate.** A real Google Chrome, signed in to your Google account, opens AI Studio on a **hidden Windows desktop**. You never see a window or taskbar button. It uploads the video and asks Gemini for the notes.
 4. **File.** The note is saved as Markdown under `notes/<category>/`, and the library index (`index.json` and `INDEX.md`) is updated. A Windows notification says the notes are ready.
@@ -50,7 +50,7 @@ If something fails, Miss Minutes retries on its own, up to 3 attempts per record
 
 | File | What it is |
 |---|---|
-| [**Download `Miss-Minutes-Setup-1.2.0.exe`**](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.2.0.exe) | **The installer.** Run this to install or update Miss Minutes. All versions are on the [Releases](https://github.com/CODE-AXION/Miss-Minutes/releases) page. |
+| [**Download `Miss-Minutes-Setup-1.3.0.exe`**](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.3.0.exe) | **The installer.** Run this to install or update Miss Minutes. All versions are on the [Releases](https://github.com/CODE-AXION/Miss-Minutes/releases) page. |
 | `%LOCALAPPDATA%\Programs\Miss Minutes\Miss Minutes.exe` | The installed app (Start menu → **Miss Minutes**). |
 | `%LOCALAPPDATA%\Programs\Miss Minutes\Uninstall Miss Minutes.exe` | **The uninstaller** (Start menu → **Uninstall Miss Minutes**). See [Uninstall](#uninstall). |
 | `desktop/dist/win-unpacked/` | The same app, unpacked, without installing (for testing). Local build output only. |
@@ -65,13 +65,13 @@ If something fails, Miss Minutes retries on its own, up to 3 attempts per record
 - **Google Chrome**. The setup wizard checks for it and offers **Download Chrome** if it is missing.
 - A Google account that can use [Google AI Studio](https://aistudio.google.com)
 
-You do **not** need Python, HandBrake or anything else: the installer includes them.
+You do **not** need Python, HandBrake, OBS or anything else: the installer includes them, and Miss Minutes can record meetings itself.
 
 ---
 
 ## Install and first-run setup
 
-1. Run **`Miss-Minutes-Setup-1.2.0.exe`** ([download](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.2.0.exe)). It installs for your user only, with no admin rights needed. You can choose the folder.
+1. Run **`Miss-Minutes-Setup-1.3.0.exe`** ([download](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.3.0.exe)). It installs for your user only, with no admin rights needed. You can choose the folder.
 2. Miss Minutes starts and opens a short setup wizard.
 
 | | |
@@ -81,7 +81,7 @@ You do **not** need Python, HandBrake or anything else: the installer includes t
 | **3. Sign in to Google**<br/>**Sign in** opens a Chrome window: sign in to the account you use for AI Studio and the wizard notices by itself. **Skip for now** is fine too: Miss Minutes asks when it first needs it. | ![Setup step 3](docs/images/setup-3-google.png) |
 | **4. Meeting notes**<br/>Where the library goes. An existing library is found and offered (it is used in place, nothing is copied), or start a new one in `Documents\Miss Minutes`, or pick any folder. | ![Setup step 4](docs/images/setup-4-library.png) |
 | **5. Smart search**<br/>Optional: search your notes by meaning, not just by keyword. **Not now** is preselected. **Turn on smart search** downloads a 207 MB search model once, after you start; nothing leaves your PC. See [Searching your notes](#searching-your-notes). | ![Setup step 5](docs/images/setup-5-search.png) |
-| **6. Recordings**<br/>The folder your recordings are saved to (default: your `Videos` folder). | ![Setup step 6](docs/images/setup-6-recordings.png) |
+| **6. Recordings**<br/>The folder your recordings are saved to (default: your `Videos` folder). Recordings made in Miss Minutes go here too; if you also use OBS, pick the folder OBS saves to. | ![Setup step 6](docs/images/setup-6-recordings.png) |
 | **7. Start with Windows**<br/>On: Miss Minutes starts quietly in the tray when you sign in to Windows, so no recording is missed. | ![Setup step 7](docs/images/setup-7-autostart.png) |
 | **8. Done**<br/>A summary. **Start Miss Minutes** starts watching. | ![Setup step 8](docs/images/setup-8-done.png) |
 
@@ -91,13 +91,14 @@ You can change every choice later in **Settings**.
 
 ## Using Miss Minutes
 
-Day to day there is nothing to do: record your meeting as usual, and the notes appear a few minutes after the recording ends.
+Day to day there is nothing to do: record your meeting (in Miss Minutes or with your usual recorder), and the notes appear a few minutes after the recording ends.
 
 ### The tray icon
 
 Closing the window does **not** quit Miss Minutes. It keeps running in the tray, next to the clock. Right-click the tray icon for:
 
 - **Open Miss Minutes**
+- **Start recording…** / **Stop recording**, and **Mute microphone** while recording (see [Recording meetings in the app](#recording-meetings-in-the-app))
 - **Pause watching** / **Resume watching**
 - **Scan now**
 - **Open library folder**
@@ -116,6 +117,26 @@ If a video is being processed when you quit, Miss Minutes asks first. That video
 - **Recently completed:** links to the newest notes.
 - **Smart search card:** appears only while smart search is being set up (download, then indexing) and hides itself when it is ready. If it fails, it shows the reason and **Retry**.
 - **Pause / Scan now** (bottom left): pause stops *new* videos from starting (the current one finishes); scan now looks for new recordings immediately.
+
+### Recording meetings in the app
+
+You don't need OBS: Miss Minutes can record the meeting itself.
+
+1. Click **Record a meeting** in the header at the top right of every page, choose **Start recording…** in the tray menu, or press **Ctrl+Alt+R** from any app.
+2. Pick the screen or window to record, whether to record the **system audio** (the other people in the call), and your **microphone**. Your last choice is preselected.
+3. **Start recording.** A red **REC 00:12** pill shows in the header, next to what is being recorded, and the tray icon turns red, with the elapsed time in its tooltip. You can close the window: recording carries on in the tray.
+4. Stop with **Stop** in the header, the tray's **Stop recording**, or **Ctrl+Alt+R** again.
+
+**Mute your mic** without stopping: **Mute** in the header, **Mute microphone** in the tray, or **Ctrl+Alt+M**. Only the mic is silenced in the recording; the screen and the call's audio keep recording. It doesn't mute you in Zoom or Teams (and muting there doesn't mute the recording).
+
+The recording is saved as an MP4 in your recordings folder (named like `2026-10-19 14-03-27.mp4`, like OBS does) and goes to the front of the queue. From there it is compressed and turned into notes like any other recording.
+
+- **Floating toolbar.** While recording, a small red **REC** pill with **Mute** and **Stop** floats on top of your meeting app whenever Miss Minutes isn't the window in front (top centre of the screen at first; drag it anywhere and it stays there). It is left out of the recording itself. Turn it off in **Settings → Recording**.
+- **Use headphones.** Through speakers, the other people are recorded twice (by the system audio and by the mic).
+- If Windows blocks the microphone, or the system audio can't be captured, the recording still runs with what is available and the header says what is missing.
+- If the recorded window is closed, or the drive is almost full, the recording stops and is saved by itself.
+- **OBS still works.** Anything saved to the recordings folder is picked up as before; both kinds sit in the same library.
+- Change or turn off the shortcuts in **Settings → Recording**.
 
 ### Queue
 
@@ -145,6 +166,12 @@ All your meetings. You can:
 - search inside the full text of every note (see [Searching your notes](#searching-your-notes));
 - filter by category, tags, date range or origin (watch folder or upload);
 - group the list **flat**, **by category** or **by tag**.
+
+**Deleting meetings:** use **Delete…** in a row's **⋯** menu, or **Delete** on the meeting's page. To delete several at once, tick their checkboxes (the box in the header ticks the whole list or group) and click **Delete…** in the bar at the bottom. You choose:
+- **Delete the note only:** the recording stays, listed as not processed (it is not turned into notes again unless you **Include** it);
+- **Delete the note and the video:** the recording and its compressed copy go too, and the meeting leaves the library.
+
+Everything deleted goes to the Windows **Recycle Bin**, so you can restore it from there.
 
 The buttons at the top rebuild or open `INDEX.md` (a Markdown table of contents of all your notes) and open the library folder.
 
@@ -195,6 +222,7 @@ The live engine log, with search and tag filters. This is the first place to loo
 
 - **Health:** shows whether the engine, HandBrake, Chrome, the watch folder and the Google session are OK.
 - **Watching:** the recordings folder, scan interval, settle time and the maximum number of attempts.
+- **Recording:** the start/stop and mute shortcuts (**Change**, **Reset**, **Turn off**), and the floating toolbar on/off. It takes effect right away; a shortcut another app already uses is refused.
 - **Compression:** HandBrake preset, encoder and quality. A higher RF gives smaller files.
 - **Google account:** see [below](#google-account).
 - **AI Studio:** the model, a fallback model, thinking level, language, retries and timeouts.
@@ -274,7 +302,7 @@ This is `%APPDATA%\Miss Minutes`: settings, the automation browser profile, app 
 **A fresh retest, step by step:**
 1. Quit Miss Minutes from the tray.
 2. Start menu → **Uninstall Miss Minutes**. Answer **No** to the library and **Yes** to settings.
-3. Run `Miss-Minutes-Setup-1.2.0.exe` again. The wizard starts from scratch and offers your existing library.
+3. Run `Miss-Minutes-Setup-1.3.0.exe` again. The wizard starts from scratch and offers your existing library.
 
 **Silent uninstall** (scripts): `"%LOCALAPPDATA%\Programs\Miss Minutes\Uninstall Miss Minutes.exe" /S` asks nothing and keeps all data.
 

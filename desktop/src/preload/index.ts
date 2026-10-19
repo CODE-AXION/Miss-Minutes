@@ -24,6 +24,7 @@ const api: MissMinutesApi = {
   readHandbrakeLog: (key) => ipcRenderer.invoke(IPC.readHandbrakeLog, key),
   getWorkerLog: () => ipcRenderer.invoke(IPC.getWorkerLog),
   openPath: (kind, key) => ipcRenderer.invoke(IPC.openPath, kind, key),
+  deleteMeeting: (key, options) => ipcRenderer.invoke(IPC.deleteMeeting, key, options),
   mediaInfo: (key) => ipcRenderer.invoke(IPC.mediaInfo, key),
 
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
@@ -52,6 +53,13 @@ const api: MissMinutesApi = {
     setEnabled: (enabled, options) => ipcRenderer.invoke(IPC.searchSetEnabled, enabled, options),
     retry: () => ipcRenderer.invoke(IPC.searchRetry),
     rebuild: () => ipcRenderer.invoke(IPC.searchRebuild)
+  },
+
+  recording: {
+    sources: () => ipcRenderer.invoke(IPC.recordingSources),
+    start: (choice) => ipcRenderer.invoke(IPC.recordingStart, choice),
+    stop: () => ipcRenderer.invoke(IPC.recordingStop),
+    setMicMuted: (muted) => ipcRenderer.invoke(IPC.recordingMute, muted)
   },
 
   app: {

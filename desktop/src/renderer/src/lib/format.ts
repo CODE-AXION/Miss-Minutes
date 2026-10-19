@@ -35,13 +35,12 @@ export function formatDuration(seconds: number): string {
   return `${rest}s`
 }
 
-/** "01:40" for countdowns and live timers (hours added when needed). */
-export function formatClock(seconds: number): string {
-  const s = Math.max(0, Math.round(seconds))
-  const h = Math.floor(s / 3600)
-  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0')
-  const ss = String(s % 60).padStart(2, '0')
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+/** Lives in shared so main (the recording tray tooltip, RC·T4) formats the same way. */
+export { formatClock } from '@shared/timestamps'
+
+/** An Electron accelerator as people read it: "CommandOrControl+Alt+R" → "Ctrl+Alt+R" (RC·T24). */
+export function hotkeyLabel(accelerator: string): string {
+  return accelerator.replace(/CommandOrControl|CmdOrCtrl/g, 'Ctrl')
 }
 
 /** HandBrake's "00h02m11s" → "2m 11s". */

@@ -1,0 +1,105 @@
+/* The floating REC pill (RC·T29). The window is transparent and frameless; only the pill is painted. The pill drags
+   the window; its buttons don't. Colours match --record in styles/theme.css. */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font:
+    600 12px/1 'Segoe UI',
+    system-ui,
+    sans-serif;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 3px 0 12px;
+  border-radius: 999px;
+  background: #d0281b;
+  color: #fff;
+  box-shadow:
+    0 2px 8px rgb(0 0 0 / 0.35),
+    inset 0 0 0 1px rgb(255 255 255 / 0.15);
+  cursor: grab;
+  -webkit-app-region: drag;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.label {
+  margin-right: 4px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / 0.6);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+/* display: inline-flex above would otherwise beat the hidden attribute (no mic → no Mute). */
+.btn[hidden] {
+  display: none;
+}
+
+.btn:hover {
+  background: rgb(255 255 255 / 0.15);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn[aria-pressed='true'] {
+  background: #fff;
+  border-color: #fff;
+  color: #d0281b;
+}
+
+.btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.square {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: currentColor;
+}

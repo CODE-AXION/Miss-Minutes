@@ -12,6 +12,7 @@ import {
   ListRestart,
   MoreHorizontal,
   Pencil,
+  Trash2,
   PlusCircle,
   RefreshCw,
   Tags,
@@ -24,6 +25,7 @@ import type { AppState } from '@shared/api'
 import type { VideoEntry } from '@shared/protocol'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Command,
   CommandEmpty,
@@ -62,6 +64,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { PosterPanel } from '@/components/brand/poster-panel'
 import { EditMetaDialog } from '@/components/edit-meta-dialog'
 import { ReprocessDialog } from '@/components/reprocess-dialog'
+import { DeleteMeetingDialog } from '@/components/delete-meeting-dialog'
 import { SearchResults } from '@/components/search-results'
 import { fileName, formatBytes, parseTs } from '@/lib/format'
 import {
@@ -122,7 +125,7 @@ function SortHeader({ label, sortKey }: { label: string; sortKey: SortKey }): JS
 
 // --- Row actions ---------------------------------------------------------------------------------
 
-type OpenDialog = { kind: 'edit' | 'reprocess'; key: string } | null
+type OpenDialog = { kind: 'edit' | 'reprocess' | 'delete'; key: string } | null
 
 function RowMenu({
   row,
@@ -175,6 +178,15 @@ function RowMenu({
         >
           <FileText /> Show note in folder
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={!up}
+          title={up ? undefined : DOWN}
+          onSelect={() => onDialog({ kind: 'delete', key: row.key })}
+        >
+          <Trash2 /> Delete…
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -193,12 +205,47 @@ const RESPONSIVE: Record<string, string | undefined> = {
 interface TableMeta {
   up: boolean
   onDialog: (dialog: OpenDialog) => void
+  /** Ticked rows, for Delete on several at once (DM·T3). */
+  selected: ReadonlySet<string>
+  onSelect: (keys: string[], on: boolean) => void
 }
+
+const metaOf = (options: unknown): TableMeta | undefined => (options as { meta?: TableMeta }).meta
 
 // Stable at module scope (TanStack v9). Row actions get their callbacks through the table's meta.
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, Row>()
 const columns = helper.columns([
+  helper.display({
+    id: 'select',
+    // Ticks every row of this table (one group when grouped); the selection itself spans the whole page.
+    header: ({ table }) => {
+      const meta = metaOf(table.options)
+      const keys = table.getRowModel().rows.map((r) => r.original.key)
+      const ticked = meta ? keys.filter((k) => meta.selected.has(k)).length : 0
+      return meta ? (
+        <Checkbox
+          aria-label="Select all"
+          checked={ticked === 0 ? false : ticked === keys.length ? true : 'indeterminate'}
+          onCheckedChange={(on) => meta.onSelect(keys, on === true)}
+        />
+      ) : null
+    },
+    cell: ({ row, table }) => {
+      const meta = metaOf(table.options)
+      const key = row.original.key
+      return meta ? (
+        // The row itself navigates on click; ticking must not.
+        <span className="flex" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            aria-label={`Select ${row.original.entry.title ?? fileName(key)}`}
+            checked={meta.selected.has(key)}
+            onCheckedChange={(on) => meta.onSelect([key], on === true)}
+          />
+        </span>
+      ) : null
+    }
+  }),
   helper.display({
     id: 'recorded',
     header: () => <SortHeader label="Recorded" sortKey="recorded" />,
@@ -300,7 +347,7 @@ const columns = helper.columns([
     id: 'actions',
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row, table }) => {
-      const meta = (table.options as { meta?: TableMeta }).meta
+      const meta = metaOf(table.options)
       return meta ? <RowMenu row={row.original} up={meta.up} onDialog={meta.onDialog} /> : null
     }
   })
@@ -467,6 +514,8 @@ export function LibraryPage(): JSX.Element | null {
   const state = useApp((s) => s.state)
   const [params, setParams] = useSearchParams()
   const [dialog, setDialog] = useState<OpenDialog>(null)
+  const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set())
+  const [deletingMany, setDeletingMany] = useState(false)
   const query = params.toString()
   const filters = useMemo(() => readFilters(new URLSearchParams(query)), [query])
   const sort = useMemo(() => readSort(new URLSearchParams(query)), [query])
@@ -519,7 +568,18 @@ export function LibraryPage(): JSX.Element | null {
 
   if (!state) return null
   const up = canCommand(state)
-  const meta: TableMeta = { up, onDialog: setDialog }
+  // Only meetings that are still listed count (a ticked one may have been deleted or reprocessed meanwhile).
+  const selected = new Set([...ticked].filter((k) => state.videos[k]?.status === 'done'))
+  const onSelect = (keys: string[], on: boolean): void =>
+    setTicked((prev) => {
+      const next = new Set(prev)
+      for (const k of keys) {
+        if (on) next.add(k)
+        else next.delete(k)
+      }
+      return next
+    })
+  const meta: TableMeta = { up, onDialog: setDialog, selected, onSelect }
   const dialogEntry = dialog ? state.videos[dialog.key] : undefined
   const smart = state.search.smart.phase
   const searching = !!filters.search.trim()
@@ -744,6 +804,43 @@ export function LibraryPage(): JSX.Element | null {
 
       {showBaseline && <BaselineSection rows={baseline} up={up} />}
 
+      {selected.size > 0 && (
+        <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-lg">
+          <span className="text-sm font-medium">
+            {selected.size} meeting{selected.size > 1 ? 's' : ''} selected
+          </span>
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" onClick={() => setTicked(new Set())}>
+              Clear
+            </Button>
+            <Button
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={!up}
+              title={up ? undefined : DOWN}
+              onClick={() => setDeletingMany(true)}
+            >
+              <Trash2 /> Delete…
+            </Button>
+          </div>
+        </div>
+      )}
+      {deletingMany && (
+        <DeleteMeetingDialog
+          open
+          onOpenChange={setDeletingMany}
+          entryKeys={[...selected]}
+          name={
+            selected.size === 1
+              ? (state.videos[[...selected][0]]?.title ?? fileName([...selected][0]))
+              : `${selected.size} meetings`
+          }
+          hasNote
+          onDeleted={(_, deleted) =>
+            setTicked((prev) => new Set([...prev].filter((k) => !deleted.includes(k))))
+          }
+        />
+      )}
+
       {dialog?.kind === 'edit' && dialogEntry && state.hello && (
         <EditMetaDialog
           open
@@ -760,6 +857,15 @@ export function LibraryPage(): JSX.Element | null {
           onOpenChange={(open) => !open && setDialog(null)}
           entryKey={dialog.key}
           hasCompressed={!!dialogEntry?.compressed}
+        />
+      )}
+      {dialog?.kind === 'delete' && dialogEntry && (
+        <DeleteMeetingDialog
+          open
+          onOpenChange={(open) => !open && setDialog(null)}
+          entryKeys={[dialog.key]}
+          name={dialogEntry.title ?? fileName(dialog.key)}
+          hasNote={!!dialogEntry.notes}
         />
       )}
     </div>

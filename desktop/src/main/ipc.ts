@@ -7,9 +7,10 @@ import {
   type Settings
 } from '@shared/api'
 import type { Ack, CommandInput, CommandName } from '@shared/protocol'
-import { openPath, readHandbrakeLog, readNote } from './files'
+import { openPath, readHandbrakeLog, readNote, trashMeetingFiles } from './files'
 import { mediaInfo } from './media'
 import { join } from 'path'
+import type { RecordingService } from './recording'
 import { DEFAULT_PROJECT_ROOT, validateRoot } from './settings'
 import type { SearchService } from './search/service'
 import { inspectLibrary, type EngineTasks } from './setup'
@@ -24,6 +25,7 @@ export interface IpcContext {
   log: LogBuffer
   tasks: EngineTasks
   search: SearchService
+  recording: RecordingService
   window(): BrowserWindow | null
   saveSettings(patch: Partial<Settings>, restart: RestartMode): Promise<Settings>
   finishSetup(patch: Partial<Settings>): Promise<void>
@@ -116,6 +118,21 @@ export function registerIpc(ctx: IpcContext): void {
     if (!OPEN_KINDS.has(kind)) throw new Error(`Unknown kind: ${kind}`)
     return openPath(settings(), kind, key ? ctx.state.videos[key] : undefined)
   })
+  // Delete (DM·T1): files to the Recycle Bin first, then the worker updates the index (it refuses while a file is
+  // still there, so a scan can't pick the recording up again as new).
+  handle(IPC.deleteMeeting, async (key: string, options: { video?: unknown } | undefined) => {
+    const entry = ctx.state.videos[key]
+    if (!entry) throw new Error('Unknown video')
+    if (!ctx.supervisor.up)
+      throw new Error('The worker is not running, so the library cannot be changed right now')
+    if (ctx.state.worker.current === key || ['compressing', 'generating'].includes(entry.status))
+      throw new Error('This video is being processed; delete it once it is done')
+    const video = options?.video === true
+    if (!video && !entry.notes) throw new Error('This recording has no note to delete')
+    await trashMeetingFiles(settings(), key, entry, video)
+    const ack = await ctx.supervisor.send({ cmd: 'delete', key, video })
+    if (!ack.ok) throw new Error(ack.error ?? 'The worker refused')
+  })
   handle(IPC.mediaInfo, (key: string) => {
     if (!(key in ctx.state.videos)) throw new Error('Unknown video')
     return mediaInfo(ctx.state.videos, settings().library, key)
@@ -202,6 +219,12 @@ export function registerIpc(ctx: IpcContext): void {
   )
   handle(IPC.searchRetry, () => ctx.search.retry())
   handle(IPC.searchRebuild, () => ctx.search.rebuild())
+
+  // In-app recording (RC·T16): the renderer sends a source id and flags; main picks the folder and the name.
+  handle(IPC.recordingSources, () => ctx.recording.sources())
+  handle(IPC.recordingStart, (choice: unknown) => ctx.recording.start(choice))
+  handle(IPC.recordingStop, () => ctx.recording.stop('user'))
+  handle(IPC.recordingMute, (muted: unknown) => ctx.recording.setMicMuted(muted === true))
 
   handle(IPC.quit, () => ctx.quit())
   handle(IPC.hide, () => ctx.window()?.hide())

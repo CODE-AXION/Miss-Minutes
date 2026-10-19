@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, dialog, nativeTheme } from 'electron'
+import { app, shell, BrowserWindow, dialog, globalShortcut, nativeTheme } from 'electron'
 import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -7,6 +7,8 @@ import { voice } from '@shared/voice'
 import { registerIpc } from './ipc'
 import { handleMedia, registerMediaScheme } from './media'
 import { Notifier } from './notify'
+import { RecordingService } from './recording'
+import { RecordingToolbar } from './toolbar'
 import {
   loadSettings,
   markSetupDone,
@@ -44,6 +46,8 @@ const search = new SearchService(state, app.getPath('userData'), (text) => log.a
 let mainWindow: BrowserWindow | null = null
 let tray: AppTray | null = null
 let notifier: Notifier | null = null
+let recording: RecordingService | null = null
+let toolbar: RecordingToolbar | null = null
 let isQuitting = false
 /** The state changed while the window was hidden: send it on the next show. */
 let stateDirty = false
@@ -114,7 +118,9 @@ function createWindow(): void {
   win.on('restore', onSeen)
 
   win.webContents.setWindowOpenHandler((details) => {
-    if (/^https?:\/\//.test(details.url)) void shell.openExternal(details.url)
+    // ms-settings: only the microphone privacy page, from the recording banner (RC·T23).
+    if (/^https?:\/\//.test(details.url) || details.url === 'ms-settings:privacy-microphone')
+      void shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
@@ -147,10 +153,85 @@ function applyTheme(settings: Settings): void {
   nativeTheme.themeSource = THEME_SOURCE[settings.theme]
 }
 
+/** The registered record hotkey ('' = none). */
+let hotkey = ''
+
+/** "Ctrl+Alt+R" for messages. */
+const keyLabel = (accelerator: string): string =>
+  accelerator.replace(/CommandOrControl|CmdOrCtrl/g, 'Ctrl')
+
+/**
+ * Global record hotkey (RC·T19): swaps the registered key for `next` ('' = off). A key another app owns (or that
+ * isn't a valid accelerator) throws, with the previous key kept registered.
+ */
+function applyHotkey(next: string): void {
+  if (next === hotkey) return
+  const toggle = (): void => recording?.toggle()
+  if (hotkey) globalShortcut.unregister(hotkey)
+  let ok = false
+  try {
+    ok = next !== '' && globalShortcut.register(next, toggle)
+  } catch {
+    ok = false
+  }
+  if (next === '' || ok) {
+    log.add('app', next ? `hotkey ${next} registered` : 'hotkey off')
+    hotkey = next
+    return
+  }
+  log.add('app', `hotkey ${next} unavailable`)
+  if (hotkey && !globalShortcut.register(hotkey, toggle)) hotkey = ''
+  throw new Error(`${keyLabel(next)} is already used by another app (or isn't a valid shortcut)`)
+}
+
+/**
+ * The mute hotkey is only registered while recording (RC·T27), so it is checked here instead: free right now, and
+ * not the record key. Throws a message for Settings.
+ */
+function checkHotkeys(patch: Partial<Settings>, before: Settings): void {
+  const record = patch.recordHotkey ?? before.recordHotkey
+  const mute = patch.muteHotkey ?? before.muteHotkey
+  if (record && record === mute)
+    throw new Error(`${keyLabel(mute)} is already the start/stop shortcut`)
+  if (typeof patch.muteHotkey !== 'string' || !mute || mute === before.muteHotkey) return
+  if (globalShortcut.isRegistered(mute)) return
+  let free = false
+  try {
+    free = globalShortcut.register(mute, () => {})
+  } catch {
+    free = false
+  }
+  if (free) globalShortcut.unregister(mute)
+  else
+    throw new Error(`${keyLabel(mute)} is already used by another app (or isn't a valid shortcut)`)
+}
+
+/** At startup and after setup: a hotkey that's taken only logs, it never blocks the app. */
+function applyStoredHotkey(): void {
+  if (state.setupNeeded) return
+  try {
+    applyHotkey(state.settings.recordHotkey)
+  } catch {
+    // logged by applyHotkey; Settings shows the key so it can be changed
+  }
+}
+
 async function updateSettings(patch: Partial<Settings>, restart: RestartMode): Promise<Settings> {
   const before = state.settings
-  const next = saveSettings(patch)
+  checkHotkeys(patch ?? {}, before)
+  // Registered before saving, so a key another app owns is refused and the stored value stays as it was.
+  const hotkeyChanged =
+    typeof patch?.recordHotkey === 'string' && patch.recordHotkey !== before.recordHotkey
+  if (hotkeyChanged && !state.setupNeeded) applyHotkey(patch.recordHotkey as string)
+  let next: Settings
+  try {
+    next = saveSettings(patch)
+  } catch (error) {
+    if (hotkeyChanged && !state.setupNeeded) applyStoredHotkey()
+    throw error
+  }
   state.setSettings(next)
+  if (next.muteHotkey !== before.muteHotkey) recording?.syncMuteHotkey()
   log.setLogsDir(join(next.library, 'logs'))
   if (next.theme !== before.theme) applyTheme(next)
   if (next.openAtLogin !== before.openAtLogin || next.startHidden !== before.startHidden)
@@ -178,13 +259,28 @@ async function finishSetup(patch: Partial<Settings>): Promise<void> {
   state.setSetupDone()
   applyLoginItem(next)
   log.add('app', 'first-run setup finished')
+  applyStoredHotkey()
   state.watchIndex(next.library)
   supervisor.start()
 }
 
-/** Tray Quit / the app's Quit: ask first while a video is being processed, then end the worker and the app. */
+/**
+ * Tray Quit / the app's Quit: ask first while recording or while a video is being processed, then save the recording
+ * (RC·T15) and end the worker and the app.
+ */
 async function quitApp({ confirm = true } = {}): Promise<void> {
   if (isQuitting) return
+  if (confirm && recording?.busy) {
+    const { response } = await dialog.showMessageBox({
+      type: 'warning',
+      title: 'Miss Minutes',
+      message: voice('recording.quitConfirm', state.settings.voice),
+      buttons: ['Stop and quit', 'Cancel'],
+      defaultId: 0,
+      cancelId: 1
+    })
+    if (response !== 0) return
+  }
   if (confirm && supervisor.busy) {
     const { response } = await dialog.showMessageBox({
       type: 'warning',
@@ -198,6 +294,9 @@ async function quitApp({ confirm = true } = {}): Promise<void> {
     if (response !== 0) return
   }
   isQuitting = true
+  // Closed and renamed before the app exits; queued by the worker's first scan next time.
+  await recording?.stop('quit')
+  toolbar?.close()
   await Promise.all([
     supervisor.shutdownForQuit(),
     search.dispose().catch((error: Error) => log.add('app', `search: ${error.message}`))
@@ -237,6 +336,23 @@ app.whenReady().then(() => {
     () => state.settings,
     (progress) => send(IPC.uploadProgress, progress)
   )
+  recording = new RecordingService(
+    state,
+    uploads,
+    notifier,
+    (text) => log.add('app', text),
+    () => state.settings,
+    navigate,
+    () => mainWindow
+  )
+  // A crash mid-recording leaves a .part in the watch folder (RC·T15).
+  void recording.recover()
+  toolbar = new RecordingToolbar(
+    state,
+    recording,
+    () => state.settings,
+    () => mainWindow
+  )
 
   state.on('change', () => {
     if (mainWindow?.isVisible()) send(IPC.state, state.snapshot())
@@ -253,6 +369,7 @@ app.whenReady().then(() => {
     log,
     tasks,
     search,
+    recording,
     window: () => mainWindow,
     saveSettings: updateSettings,
     finishSetup,
@@ -277,6 +394,8 @@ app.whenReady().then(() => {
     resume: () => command('resume'),
     scanNow: () => command('scan_now'),
     openLibrary: () => void shell.openPath(state.settings.library),
+    toggleRecording: () => recording?.toggle(),
+    toggleMicMuted: () => recording?.toggleMicMuted(),
     quit: () => void quitApp()
   })
 
@@ -284,6 +403,7 @@ app.whenReady().then(() => {
   state.watchIndex(state.settings.library)
   supervisor.start()
   search.start(state.settings).catch((error: Error) => log.add('app', `search: ${error.message}`))
+  applyStoredHotkey()
 })
 
 // A tray app: closing the window never quits.
@@ -296,4 +416,7 @@ app.on('before-quit', (event) => {
   void quitApp({ confirm: false })
 })
 
-app.on('will-quit', () => supervisor.killNow())
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
+  supervisor.killNow()
+})

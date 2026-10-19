@@ -252,6 +252,8 @@ export type WorkerCommand =
   | Cmd<'include_all_baseline'>
   /** `pending`/`failed` -> `baseline` (ignore the recording). */
   | Cmd<'exclude', { key: string }>
+  /** Main only (DM·T1): after it moved the files to the Recycle Bin. */
+  | Cmd<'delete', { key: string; video: boolean }>
   /** Only `done` entries; omitted fields keep their value. May ack with a `warning`. */
   | Cmd<'edit', { key: string; title?: string; category?: string; tags?: string[] }>
   | Cmd<'reindex'>

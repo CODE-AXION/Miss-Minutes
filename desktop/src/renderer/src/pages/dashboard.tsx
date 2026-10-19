@@ -89,7 +89,7 @@ function NowProcessing({ state }: { state: AppState }): JSX.Element {
           ) : (
             <Mascot pose={pose} size={96} className="shrink-0" />
           )}
-          <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <CardTitle className="font-display text-xl">
               {down ? 'Worker not running' : worker.paused ? 'Paused' : 'Nothing processing'}
             </CardTitle>

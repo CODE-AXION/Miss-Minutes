@@ -17,6 +17,8 @@ const INK = '#3B2416'
 const ORANGE = '#F29A32'
 const RIM = '#D2691E'
 const DOT = { idle: '#9A9A9A', busy: '#F28C38', paused: '#E7A93A', attention: '#E5483A' }
+/** In-app recording (RC·T17): a bigger, deeper red dot with a white ring, so it never reads as `attention`. */
+const REC = '#D92B2B'
 
 /** Rasterise an SVG at an exact pixel size (density scales the vector instead of resampling a bitmap). */
 function png(svg, size, viewBox) {
@@ -26,8 +28,8 @@ function png(svg, size, viewBox) {
     .toBuffer()
 }
 
-/** Tray glyph on a 32-unit grid: the orange clock-face disc with hands, and a status dot. */
-function traySvg(dot, minuteStep = 0) {
+/** Tray glyph on a 32-unit grid: the orange clock-face disc with hands, and a status dot (or the rec dot). */
+function traySvg(dot, minuteStep = 0, rec = false) {
   const angle = (minuteStep * 45 * Math.PI) / 180
   const mx = (14 + 7.5 * Math.sin(angle)).toFixed(2)
   const my = (15 - 7.5 * Math.cos(angle)).toFixed(2)
@@ -36,7 +38,12 @@ function traySvg(dot, minuteStep = 0) {
   <ellipse cx="14" cy="15" rx="11" ry="12" fill="${ORANGE}" stroke="${INK}" stroke-width="2"/>
   <path d="M14 15 L10 12" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
   <path d="M14 15 L${mx} ${my}" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="25" cy="25" r="6" fill="${dot}" stroke="${INK}" stroke-width="2"/>
+  ${
+    rec
+      ? `<circle cx="24" cy="24" r="7" fill="${REC}" stroke="${INK}" stroke-width="2"/>
+  <circle cx="24" cy="24" r="4.25" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>`
+      : `<circle cx="25" cy="25" r="6" fill="${dot}" stroke="${INK}" stroke-width="2"/>`
+  }
 </svg>
 `
 }
@@ -84,7 +91,8 @@ async function main() {
   const tray = {
     idle: traySvg(DOT.idle),
     paused: traySvg(DOT.paused),
-    attention: traySvg(DOT.attention)
+    attention: traySvg(DOT.attention),
+    recording: traySvg(REC, 0, true)
   }
   for (let frame = 0; frame < 8; frame++) tray[`busy-${frame}`] = traySvg(DOT.busy, frame)
   for (const [name, svg] of Object.entries(tray)) {

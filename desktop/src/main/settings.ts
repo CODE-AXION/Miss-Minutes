@@ -4,6 +4,7 @@ import { existsSync, writeFileSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
 import type { EngineMode, GoogleState, Settings, ThemeSetting } from '@shared/api'
+import { DEFAULT_MUTE_HOTKEY, DEFAULT_RECORD_HOTKEY, type RecordingChoice } from '@shared/recording'
 
 export const DEFAULT_PROJECT_ROOT = 'C:\\laragon_bck\\www\\video_automation'
 
@@ -53,7 +54,11 @@ export function defaultSettings(
     theme: 'system',
     voice: true,
     // Not an engine argument (toArgs), so toggling it never restarts the worker (SS·T12).
-    smartSearch: false
+    smartSearch: false,
+    // App-only too; Ctrl+Shift+R would steal the browsers' hard refresh (RC·T19).
+    recordHotkey: DEFAULT_RECORD_HOTKEY,
+    muteHotkey: DEFAULT_MUTE_HOTKEY,
+    recordingToolbar: true
   }
 }
 
@@ -78,13 +83,24 @@ interface StoreShape {
   setupDone: boolean
   /** From the last signin_ok, cleared by signout_ok (11c·T5). */
   googleAccount: GoogleState['account']
+  /** The picker's last Start (RC·T11), preselected next time; not a setting. */
+  lastRecording: RecordingChoice | null
+  /** Where the user dragged the recording mini-toolbar (RC·T29); null = top centre of the primary display. */
+  toolbarPosition: { x: number; y: number } | null
 }
 
 let store: Store<StoreShape> | null = null
 
 function getStore(): Store<StoreShape> {
   store ??= new Store<StoreShape>({
-    defaults: { settings: {}, trayHintShown: false, setupDone: false, googleAccount: null }
+    defaults: {
+      settings: {},
+      trayHintShown: false,
+      setupDone: false,
+      googleAccount: null,
+      lastRecording: null,
+      toolbarPosition: null
+    }
   })
   return store
 }
@@ -184,6 +200,15 @@ export function takeTrayHint(): boolean {
   getStore().set('trayHintShown', true)
   return true
 }
+
+export const loadLastRecording = (): RecordingChoice | null => getStore().get('lastRecording')
+export const saveLastRecording = (choice: RecordingChoice): void =>
+  getStore().set('lastRecording', choice)
+
+export const loadToolbarPosition = (): { x: number; y: number } | null =>
+  getStore().get('toolbarPosition')
+export const saveToolbarPosition = (position: { x: number; y: number }): void =>
+  getStore().set('toolbarPosition', position)
 
 // --- Engine command line (the one spawn resolver, 11c·T2) -------------------------------------
 

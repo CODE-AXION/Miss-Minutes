@@ -97,6 +97,12 @@ class Library:
                 self.on_change(key, entry)
             return entry
 
+    def remove(self, key: str) -> None:
+        """Forget a video entirely (the app's Delete with its video); the caller sends a fresh snapshot."""
+        with self.lock:
+            self.videos.pop(key, None)
+            self.save()
+
     def write_markdown_index(self) -> None:
         done = sorted((e for e in self.videos.values() if e.get("status") == "done"), key=lambda e: e.get("recorded", ""), reverse=True)
         lines = ["# Meeting Library", "", f"_{len(done)} meetings · updated {datetime.now().strftime('%Y-%m-%d %H:%M')}_", ""]
@@ -758,6 +764,33 @@ class Worker:
         key, _ = self.entry(cmd)
         self.check_idle(key)
         return edit_note(self.lib, key, cmd.get("title"), cmd.get("category"), cmd.get("tags"))
+
+    def do_delete(self, cmd: dict) -> None:
+        """The app's Delete. The app moves the files to the Recycle Bin first; this only updates the index.
+
+        video=false: the note is gone and the recording stays, as a baseline entry (not processed again unless
+        included). video=true: the recording and its compressed copy are gone too, and the entry is dropped. Refused
+        while a file is still there, so a scan can never pick the recording up again as new.
+        """
+        key, entry = self.entry(cmd)
+        self.check_idle(key)
+        if entry.get("status") in IN_PROGRESS:
+            raise ValueError("this video is being processed")
+        note = self.lib.root / entry["notes"] if entry.get("notes") else None
+        if note is not None and note.is_file():
+            raise ValueError(f"the note is still there: {note}")
+        if key in self.priority:
+            self.priority.remove(key)
+        self.included.discard(key)
+        if cmd.get("video"):
+            if Path(key).is_file():
+                raise ValueError(f"the recording is still there: {key}")
+            self.lib.remove(key)
+            self.send_snapshot()
+        else:
+            if note is None:
+                raise ValueError("this recording has no note")
+            self.lib.update(key, status="baseline", notes=None, processed=None)
 
     def do_reindex(self, cmd: dict) -> None:
         self.lib.write_markdown_index()

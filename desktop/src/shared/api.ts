@@ -15,6 +15,7 @@ import type {
 } from './protocol'
 import type { ChunkType } from './chunker'
 import type { MediaInfo } from './media'
+import type { RecordingChoice, RecordingSource, RecordingStatus } from './recording'
 
 // --- Settings (electron-store; defaults mirror argparse, see 05·T1) ------------------------
 
@@ -62,6 +63,12 @@ export interface Settings {
   voice: boolean
   /** Opt-in semantic search (EmbeddingGemma 2, local). Keyword search is always on. */
   smartSearch: boolean
+  /** Global start/stop recording shortcut (an Electron accelerator); '' = off (RC·T19). */
+  recordHotkey: string
+  /** Mute/unmute the mic while recording; only taken while a recording with a mic runs; '' = off (RC·T27). */
+  muteHotkey: string
+  /** The floating always-on-top REC pill while recording, hidden from the capture (RC·T29). */
+  recordingToolbar: boolean
 }
 
 /** after-current = restart the worker once the current video is finished; now = kill and requeue it. */
@@ -106,6 +113,8 @@ export interface AppState {
   /** Latest `login_required` stage still unresolved (cleared by the next stage of that video). */
   lastLoginRequired: { key: string; at: string; wait_s: number; hidden: boolean } | null
   search: SearchStatus
+  /** The in-app recorder (RC·T10); never anything but `idle` without a visible indicator. */
+  recording: RecordingStatus
 }
 
 /** Smart search (SS·T13): the keyword index is always there; the semantic layer is opt-in. */
@@ -192,7 +201,9 @@ export interface UploadResult {
 
 /** Main asks the renderer to show a page (a toast or tray click). */
 /** signin = open the Google sign-in dialog (the session-expired toast). */
-export type NavigateRequest = { to: 'video'; key: string } | { to: 'dashboard' } | { to: 'signin' }
+/** record = open the recording picker (tray / hotkey while idle, RC·T16). */
+export type NavigateRequest =
+  { to: 'video'; key: string } | { to: 'dashboard' } | { to: 'signin' } | { to: 'record' }
 
 export interface UploadProgress {
   path: string
@@ -233,6 +244,11 @@ export interface MissMinutesApi {
   openPath(kind: OpenPathKind, key?: string): Promise<void>
   /** Which playable files exist for the entry (resolved by main, never from a renderer path). */
   mediaInfo(key: string): Promise<MediaInfo>
+  /**
+   * Deletes a meeting's note, and with `video` its recording and compressed copy too (DM·T1). The files go to the
+   * Recycle Bin; without `video` the recording stays, listed as not processed.
+   */
+  deleteMeeting(key: string, options: { video: boolean }): Promise<void>
 
   getSettings(): Promise<Settings>
   saveSettings(patch: Partial<Settings>, options: { restart: RestartMode }): Promise<Settings>
@@ -284,6 +300,23 @@ export interface MissMinutesApi {
     rebuild(): Promise<void>
   }
 
+  /** In-app recording (RC·T10); progress arrives in `AppState.recording`. Main picks the folder and the name. */
+  recording: {
+    /** Screens and windows with thumbnails, plus free space in the watch folder and the last choice. */
+    sources(): Promise<{
+      sources: RecordingSource[]
+      freeBytes: number
+      folder: string
+      last: RecordingChoice | null
+    }>
+    /** Resolves once the recording runs; rejects (the picker shows why) when it could not start. */
+    start(choice: RecordingChoice): Promise<void>
+    /** Stops, saves and queues the recording. */
+    stop(): Promise<void>
+    /** Silences or restores the mic in the running recording (RC·T27). */
+    setMicMuted(muted: boolean): Promise<void>
+  }
+
   app: {
     quit(): Promise<void>
     hide(): Promise<void>
@@ -302,6 +335,7 @@ export const IPC = {
   readHandbrakeLog: 'files:read-hb-log',
   getWorkerLog: 'worker:log',
   openPath: 'files:open',
+  deleteMeeting: 'files:delete-meeting',
   mediaInfo: 'media:info',
   getSettings: 'settings:get',
   saveSettings: 'settings:save',
@@ -325,6 +359,10 @@ export const IPC = {
   searchSetEnabled: 'search:set-enabled',
   searchRetry: 'search:retry',
   searchRebuild: 'search:rebuild',
+  recordingSources: 'recording:sources',
+  recordingStart: 'recording:start',
+  recordingStop: 'recording:stop',
+  recordingMute: 'recording:mute',
   // push
   state: 'state:changed',
   log: 'worker:log-lines',

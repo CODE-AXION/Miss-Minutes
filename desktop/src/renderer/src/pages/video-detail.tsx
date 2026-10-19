@@ -15,6 +15,7 @@ import {
   FileText,
   FolderOpen,
   Pencil,
+  Trash2,
   PlusCircle,
   RefreshCw,
   RotateCcw,
@@ -40,6 +41,7 @@ import { PosterPanel } from '@/components/brand/poster-panel'
 import { TvaStamp, type StampTone } from '@/components/brand/tva-stamp'
 import { EditMetaDialog } from '@/components/edit-meta-dialog'
 import { ReprocessDialog } from '@/components/reprocess-dialog'
+import { DeleteMeetingDialog } from '@/components/delete-meeting-dialog'
 import { LogViewer } from '@/components/log-viewer'
 import { NotesViewer } from '@/components/notes-viewer'
 import { StatusBadge } from '@/components/status-badge'
@@ -126,6 +128,7 @@ function Header({
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [reprocessing, setReprocessing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const voiceOn = state.settings.voice
   const max = maxAttempts(state)
   const final = isFinalFailure(entry, max)
@@ -302,6 +305,16 @@ function Header({
         <ActionButton variant="ghost" onClick={() => open('hbLog', entryKey)}>
           <ScrollText /> HandBrake log
         </ActionButton>
+        {status !== 'compressing' && status !== 'generating' && !current && (
+          <ActionButton
+            variant="ghost"
+            className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
+            disabledReason={down}
+            onClick={() => setDeleting(true)}
+          >
+            <Trash2 /> Delete
+          </ActionButton>
+        )}
       </div>
 
       {state.hello && (
@@ -320,6 +333,17 @@ function Header({
         entryKey={entryKey}
         hasCompressed={!!entry.compressed}
       />
+      {deleting && (
+        <DeleteMeetingDialog
+          open
+          onOpenChange={setDeleting}
+          entryKeys={[entryKey]}
+          name={entry.title ?? fileName(entryKey)}
+          hasNote={!!entry.notes}
+          // With its video the meeting is gone from the library, so this page has nothing left to show.
+          onDeleted={(video) => video && navigate('/library')}
+        />
+      )}
     </header>
   )
 }

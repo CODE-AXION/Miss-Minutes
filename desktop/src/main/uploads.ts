@@ -4,6 +4,7 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'path'
 import { Transform } from 'stream'
 import { pipeline } from 'stream/promises'
 import type { Settings, UploadProgress, UploadResult } from '@shared/api'
+import { uniqueStem } from '@shared/recording'
 import type { State } from './state'
 import type { Supervisor } from './worker'
 
@@ -12,6 +13,20 @@ const PROGRESS_MS = 200
 const stemOf = (file: string): string => basename(file, extname(file)).toLowerCase()
 const samePath = (a: string, b: string): boolean =>
   resolve(a).toLowerCase() === resolve(b).toLowerCase()
+
+/**
+ * Lower-cased stems used by an entry or by a file in `dirs` (`.part` stripped): the worker reuses
+ * compressed/<stem>.mp4, so a new video with a taken stem would get another recording's encode. Shared by uploads
+ * and recordings (RC·T12).
+ */
+export async function takenStems(state: State, dirs: string[]): Promise<Set<string>> {
+  const taken = new Set(Object.keys(state.videos).map(stemOf))
+  for (const dir of dirs) {
+    const files = await readdir(dir).catch(() => [] as string[])
+    for (const file of files) taken.add(stemOf(file.replace(/\.part$/i, '')))
+  }
+  return taken
+}
 
 /**
  * Videos added from the app: copied to library/uploads as *.part (scans ignore it), renamed when complete, then
@@ -74,7 +89,8 @@ export class Uploads {
     }
   }
 
-  private async enqueue(dest: string): Promise<Omit<UploadResult, 'path'>> {
+  /** Queues a finished file first, skipping the settle wait; also used for in-app recordings (RC·T14). */
+  async enqueue(dest: string): Promise<Omit<UploadResult, 'path'>> {
     if (!this.supervisor.up) {
       return {
         ok: true,
@@ -91,21 +107,12 @@ export class Uploads {
     }
   }
 
-  /**
-   * `<stem> (2)`, `(3)`, … when the stem is already used by an entry, an upload or an encode: the worker reuses
-   * compressed/<stem>.mp4, so a clash would hand this video another recording's encode.
-   */
+  /** `<stem> (2)`, `(3)`, … when the stem is already used by an entry, an upload or an encode (see takenStems). */
   private async uniqueName(path: string, settings: Settings): Promise<string> {
-    const taken = new Set(Object.keys(this.state.videos).map(stemOf))
-    for (const folder of ['uploads', 'compressed']) {
-      const files = await readdir(join(settings.library, folder)).catch(() => [] as string[])
-      for (const file of files) taken.add(stemOf(file.replace(/\.part$/i, '')))
-    }
+    const folders = ['uploads', 'compressed'].map((folder) => join(settings.library, folder))
+    const taken = await takenStems(this.state, folders)
     const ext = extname(path)
-    const stem = basename(path, ext)
-    let candidate = stem
-    for (let n = 2; taken.has(candidate.toLowerCase()); n++) candidate = `${stem} (${n})`
-    return candidate + ext
+    return uniqueStem(basename(path, ext), taken) + ext
   }
 
   private async copy(from: string, to: string, total: number): Promise<void> {

@@ -38,6 +38,10 @@
   --success-foreground: #fff8ee;
   --warning: #865710;
   --warning-foreground: #fff8ee;
+  /* In-app recording (RC·T28): a true red, apart from the orange --primary and the brick --destructive. White text
+     on it passes AA. */
+  --record: #d0281b;
+  --record-foreground: #ffffff;
   --link: #9a4a16;
   --brand: #d2691e;
   --border: #cdbb9a;
@@ -83,6 +87,8 @@
   --success-foreground: #1a120c;
   --warning: #e7a93a;
   --warning-foreground: #1a120c;
+  --record: #d0281b;
+  --record-foreground: #ffffff;
   --link: #f28c38;
   --brand: #f28c38;
   --border: #3d2e21;
@@ -143,6 +149,8 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-record: var(--record);
+  --color-record-foreground: var(--record-foreground);
   --color-link: var(--link);
   --color-brand: var(--brand);
   --color-border: var(--border);

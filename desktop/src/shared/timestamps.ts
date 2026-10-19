@@ -52,3 +52,12 @@ export function seekTarget(seconds: number, duration?: number): number {
   }
   return target
 }
+
+/** "01:40" for countdowns and live timers (hours added when needed); shared with main (RC·T4). */
+export function formatClock(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds))
+  const h = Math.floor(s / 3600)
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0')
+  const ss = String(s % 60).padStart(2, '0')
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}

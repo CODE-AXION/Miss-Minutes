@@ -11,6 +11,7 @@ import type {
   WorkerStatus
 } from '@shared/api'
 import type { HelloEvent, StageEvent, VideoEntry, WorkerMessage } from '@shared/protocol'
+import type { RecordingStatus } from '@shared/recording'
 import { engineProblem, isSetupDone, loadGoogleAccount, saveGoogleAccount } from './settings'
 
 const BROADCAST_MS = 100
@@ -55,6 +56,7 @@ export class State extends EventEmitter {
     modelOnDisk: false,
     diskBytes: 0
   }
+  recording: RecordingStatus = { phase: 'idle' }
 
   constructor(public settings: Settings) {
     super()
@@ -78,7 +80,8 @@ export class State extends EventEmitter {
       google: this.google,
       signinRunning: this.signinRunning,
       lastLoginRequired: this.lastLoginRequired,
-      search: this.search
+      search: this.search,
+      recording: this.recording
     }
   }
 
@@ -109,6 +112,12 @@ export class State extends EventEmitter {
   /** From the SearchService (SS·T13), which throttles its progress updates itself. */
   setSearch(search: SearchStatus): void {
     this.search = search
+    this.changed()
+  }
+
+  /** From the RecordingService (RC·T10), which throttles its byte counter itself. */
+  setRecording(recording: RecordingStatus): void {
+    this.recording = recording
     this.changed()
   }
 

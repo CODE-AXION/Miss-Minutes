@@ -42,6 +42,44 @@ const LINES = {
     plain: 'Watching paused',
     flavoured: "Watching paused. I'll wait right here."
   },
+  'recording.saved': {
+    plain: 'Recording saved ({duration}). Notes are on the way.',
+    flavoured: "Recording saved ({duration}), sugar. I'll have your notes on the way."
+  },
+  'recording.trackEnded': {
+    plain:
+      'The recorded window or screen went away, so the recording stopped and was saved ({duration}).',
+    flavoured:
+      'That window up and vanished, hon, so I stopped and saved the recording ({duration}).'
+  },
+  'recording.diskStop': {
+    plain: 'The drive is almost full, so the recording stopped and was saved ({duration}).',
+    flavoured: "The drive's nearly full, sugar, so I stopped and saved the recording ({duration})."
+  },
+  'recording.micBlocked': {
+    plain: 'Microphone blocked by Windows: only the system audio is recorded.',
+    flavoured: "Windows is blocking the microphone, hon, so I'm only getting the system audio."
+  },
+  'recording.micFailed': {
+    plain: 'The microphone could not be opened: only the system audio is recorded.',
+    flavoured: "I couldn't open the microphone, sugar, so I'm only getting the system audio."
+  },
+  'recording.noLoopback': {
+    plain: 'System audio could not be captured: only the microphone is recorded.',
+    flavoured: "I can't hear the system audio, hon, so I'm only getting the microphone."
+  },
+  'recording.noAudio': {
+    plain: 'No audio is being recorded: video only.',
+    flavoured: "I can't hear a thing, sugar: this one's video only."
+  },
+  'recording.headphones': {
+    plain: 'Use headphones, or the other people are recorded twice (speakers + mic).',
+    flavoured: "Pop on some headphones, hon, or I'll hear everyone twice (speakers + mic)."
+  },
+  'recording.quitConfirm': {
+    plain: 'A recording is in progress. Stop, save and quit?',
+    flavoured: "We're still recording, sugar. Stop, save and quit?"
+  },
   'tray.closed': {
     plain: 'Still running in the tray',
     flavoured: "Still running in the tray — I'll keep an eye on the timeline while you're away!"
