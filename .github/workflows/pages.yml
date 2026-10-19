@@ -9,6 +9,7 @@ on:
       - 'site/**'
       - 'docs/images/**'
       - 'desktop/resources/brand/icon.svg'
+      - 'desktop/resources/icon.png'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -35,6 +36,7 @@ jobs:
           cp -r site/. _site/
           cp docs/images/* _site/images/
           cp desktop/resources/brand/icon.svg _site/images/icon.svg
+          cp desktop/resources/icon.png _site/images/icon.png
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
