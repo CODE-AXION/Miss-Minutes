@@ -6,6 +6,16 @@ Miss Minutes turns your meeting recordings into searchable meeting notes, automa
 
 Record the meeting from Miss Minutes itself, or with any recorder you already use (for example OBS): it watches the folder your recordings are saved to. Each new recording is compressed, uploaded to Google AI Studio and turned into a Markdown note with an overview, topics, decisions, action items and diagrams. The note is then filed in your library by category and tags. Everything runs on your own PC, in the background, from the system tray.
 
+## Highlights
+
+- **Built-in meeting recorder.** Record any screen or window with the call's audio and your mic, no OBS needed. Start from the header, the tray or **Ctrl+Alt+R**; mute your mic mid-meeting with **Ctrl+Alt+M**.
+- **Floating REC toolbar.** While you're in Zoom, Teams or Meet, a small always-on-top pill shows the time with **Mute** and **Stop**. It stays out of the recording itself.
+- **Meeting notes, automatically.** Every recording (made in the app, by OBS or dropped in) is compressed and turned by Gemini into a Markdown note: overview, topics, decisions, action items and diagrams. Timestamps in the note play the recording from that moment.
+- **An organised library.** Notes are filed by category and tags. Filter, group, edit, reprocess, or delete meetings (one or many at once, to the Recycle Bin).
+- **Search your notes.** Full-text search, plus optional smart search by meaning that runs entirely on your PC.
+- **Runs quietly in the background.** From the system tray, starting with Windows: failures are retried, and a notification tells you when notes are ready.
+- **Your data stays yours.** The library lives on your PC; recordings are only sent to your own Google AI Studio account to write the notes.
+
 ![Dashboard](docs/images/dashboard.png)
 
 ---
@@ -122,9 +132,13 @@ If a video is being processed when you quit, Miss Minutes asks first. That video
 
 You don't need OBS: Miss Minutes can record the meeting itself.
 
+![Choosing what to record](docs/images/recording-picker.png)
+
 1. Click **Record a meeting** in the header at the top right of every page, choose **Start recording…** in the tray menu, or press **Ctrl+Alt+R** from any app.
 2. Pick the screen or window to record, whether to record the **system audio** (the other people in the call), and your **microphone**. Your last choice is preselected.
 3. **Start recording.** A red **REC 00:12** pill shows in the header, next to what is being recorded, and the tray icon turns red, with the elapsed time in its tooltip. You can close the window: recording carries on in the tray.
+
+   ![Recording in progress](docs/images/recording.png)
 4. Stop with **Stop** in the header, the tray's **Stop recording**, or **Ctrl+Alt+R** again.
 
 **Mute your mic** without stopping: **Mute** in the header, **Mute microphone** in the tray, or **Ctrl+Alt+M**. Only the mic is silenced in the recording; the screen and the call's audio keep recording. It doesn't mute you in Zoom or Teams (and muting there doesn't mute the recording).
@@ -132,6 +146,8 @@ You don't need OBS: Miss Minutes can record the meeting itself.
 The recording is saved as an MP4 in your recordings folder (named like `2026-10-19 14-03-27.mp4`, like OBS does) and goes to the front of the queue. From there it is compressed and turned into notes like any other recording.
 
 - **Floating toolbar.** While recording, a small red **REC** pill with **Mute** and **Stop** floats on top of your meeting app whenever Miss Minutes isn't the window in front (top centre of the screen at first; drag it anywhere and it stays there). It is left out of the recording itself. Turn it off in **Settings → Recording**.
+
+  ![Floating recording toolbar](docs/images/recording-toolbar.png)
 - **Use headphones.** Through speakers, the other people are recorded twice (by the system audio and by the mic).
 - If Windows blocks the microphone, or the system audio can't be captured, the recording still runs with what is available and the header says what is missing.
 - If the recorded window is closed, or the drive is almost full, the recording stops and is saved by itself.
@@ -172,6 +188,8 @@ All your meetings. You can:
 - **Delete the note and the video:** the recording and its compressed copy go too, and the meeting leaves the library.
 
 Everything deleted goes to the Windows **Recycle Bin**, so you can restore it from there.
+
+![Deleting a meeting](docs/images/delete-meeting.png)
 
 The buttons at the top rebuild or open `INDEX.md` (a Markdown table of contents of all your notes) and open the library folder.
 
@@ -223,6 +241,8 @@ The live engine log, with search and tag filters. This is the first place to loo
 - **Health:** shows whether the engine, HandBrake, Chrome, the watch folder and the Google session are OK.
 - **Watching:** the recordings folder, scan interval, settle time and the maximum number of attempts.
 - **Recording:** the start/stop and mute shortcuts (**Change**, **Reset**, **Turn off**), and the floating toolbar on/off. It takes effect right away; a shortcut another app already uses is refused.
+
+  ![Recording settings](docs/images/settings-recording.png)
 - **Compression:** HandBrake preset, encoder and quality. A higher RF gives smaller files.
 - **Google account:** see [below](#google-account).
 - **AI Studio:** the model, a fallback model, thinking level, language, retries and timeouts.
