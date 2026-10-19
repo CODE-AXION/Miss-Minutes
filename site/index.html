@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miss Minutes: meeting notes, automatically</title>
+  <meta name="description" content="Miss Minutes turns your meeting recordings into searchable meeting notes, automatically. A Windows app that records, compresses and summarises your meetings with Gemini.">
+  <meta property="og:title" content="Miss Minutes">
+  <meta property="og:description" content="Turn meeting recordings into searchable meeting notes, automatically.">
+  <meta property="og:image" content="images/dashboard.png">
+  <meta property="og:type" content="website">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="images/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Righteous&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top"><img src="images/icon.svg" alt="" width="32" height="32"><span>Miss Minutes</span></a>
+      <nav aria-label="Sections">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#tour">Tour</a>
+        <a href="#install">Install</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn-small" href="#download">Download</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">For Windows 10 &amp; 11</p>
+          <h1>Your meetings, filed as notes. <span>Automatically.</span></h1>
+          <p class="lead">Miss Minutes records your meeting (or picks up the recording from OBS), compresses it, and has Gemini write a Markdown note with the overview, decisions, action items and diagrams. Then it files the note in a searchable library on your PC.</p>
+          <div class="cta">
+            <a class="btn btn-primary js-download" href="https://github.com/CODE-AXION/Miss-Minutes/releases/latest">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Download for Windows</span>
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/CODE-AXION/Miss-Minutes">View on GitHub</a>
+          </div>
+          <p class="meta js-release-meta">Latest release · Windows installer · no admin rights needed</p>
+        </div>
+        <div class="hero-art">
+          <img src="images/miss-minutes-hello.gif" alt="Miss Minutes, a cartoon clock, waving hello" width="260" height="260">
+        </div>
+      </div>
+      <div class="wrap">
+        <figure class="shot shot-hero">
+          <img src="images/dashboard.png" alt="The Miss Minutes dashboard: what is processing, counters, the queue and recently completed notes" width="1264" height="761">
+        </figure>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="wrap">
+        <h2>Everything a meeting leaves behind, sorted</h2>
+        <p class="section-lead">Record, and get on with your day. The notes show up a few minutes after the meeting ends.</p>
+        <div class="grid features">
+          <article class="card">
+            <div class="icon rec" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg></div>
+            <h3>Built-in meeting recorder</h3>
+            <p>Record any screen or window with the call's audio and your mic, with no OBS needed. Start from the header, the tray or <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>; mute your mic with <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd>.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="4"/><circle cx="8" cy="12" r="1.6" class="fill"/></svg></div>
+            <h3>Floating REC toolbar</h3>
+            <p>While you're in Zoom, Teams or Meet, a small always-on-top pill shows the time with <b>Mute</b> and <b>Stop</b>. It stays out of the recording itself.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></div>
+            <h3>Notes, written for you</h3>
+            <p>Each recording becomes a Markdown note: overview, topics, decisions, action items and diagrams. Click any <code>[09:12]</code> timestamp to play the recording from that moment.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h5v14H4zM10 5h4v14h-4zM15.5 6l4-1 2.5 13.5-4 1z"/></svg></div>
+            <h3>An organised library</h3>
+            <p>Notes are filed by category and tags. Filter, group, edit, reprocess, or delete meetings, one or many at once, to the Recycle Bin.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg></div>
+            <h3>Search by word or by meaning</h3>
+            <p>Full-text search finds the exact passage. Optional smart search answers questions like <i>"when did we drop the manual approval step?"</i>, running entirely on your PC.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17h18M6 17V9h12v8"/><path d="M12 4v2"/></svg></div>
+            <h3>Quiet, in the tray</h3>
+            <p>Starts with Windows and works in the background. Failures are retried on their own, and a notification tells you when notes are ready.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"/></svg></div>
+            <h3>Updates itself</h3>
+            <p>New versions download in the background. Restart to install, or it installs the next time you quit. Never mid-recording.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+            <h3>Your data stays yours</h3>
+            <p>The library is plain Markdown and JSON on your PC. Recordings are only sent to your own Google AI Studio account to write the notes.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="section alt">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <p class="section-lead">From "Stop recording" to a filed note, without touching anything.</p>
+        <ol class="steps">
+          <li><span class="num">1</span><h3>Detect</h3><p>A recording made in the app is queued at once. Files from OBS or other recorders are picked up once they stop growing, so nothing is grabbed mid-recording.</p></li>
+          <li><span class="num">2</span><h3>Compress</h3><p>HandBrake (included) shrinks the video, often to 20–40% of its size, so the upload is quick.</p></li>
+          <li><span class="num">3</span><h3>Generate</h3><p>A hidden Chrome, signed in to your Google account, uploads the video to AI Studio and asks Gemini for the notes. You never see a window.</p></li>
+          <li><span class="num">4</span><h3>File</h3><p>The note is saved under its category, the library index is updated, and a Windows notification says it's ready.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="tour" class="section">
+      <div class="wrap">
+        <h2>Take a look around</h2>
+        <div class="tour">
+          <figure class="shot"><img src="images/recording-picker.png" alt="Choosing which screen or window to record, with system audio and microphone options" loading="lazy"><figcaption><b>Record a meeting.</b> Pick the screen or window, the call's audio and your mic.</figcaption></figure>
+          <figure class="shot"><img src="images/video-notes.png" alt="A generated meeting note with the recording docked beside it" loading="lazy"><figcaption><b>Read the notes.</b> Click a timestamp to play the recording from there.</figcaption></figure>
+          <figure class="shot"><img src="images/library.png" alt="The library of meetings, with filters by category, tag and date" loading="lazy"><figcaption><b>Browse the library.</b> Filter by category, tag, date or origin, and search inside every note.</figcaption></figure>
+          <figure class="shot"><img src="images/queue.png" alt="The processing queue with pending, active and failed items" loading="lazy"><figcaption><b>Watch the queue.</b> See what's waiting, running or failed, and retry with a click.</figcaption></figure>
+          <figure class="shot"><img src="images/recording-toolbar.png" alt="The small floating REC toolbar on top of a meeting app" loading="lazy"><figcaption><b>Stay in your call.</b> The floating toolbar keeps Mute and Stop in reach.</figcaption></figure>
+          <figure class="shot"><img src="images/settings.png" alt="Settings: health checks, watching, recording, compression and AI Studio options" loading="lazy"><figcaption><b>Tune it.</b> Health checks, compression, the model, and background context for better notes.</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="section alt">
+      <div class="wrap download">
+        <div>
+          <h2>Download Miss Minutes</h2>
+          <p class="section-lead">One installer with everything included: no Python, HandBrake or OBS to set up.</p>
+          <a class="btn btn-primary btn-large js-download" href="https://github.com/CODE-AXION/Miss-Minutes/releases/latest">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="js-download-label">Download the installer</span>
+          </a>
+          <p class="meta js-release-meta-2">Windows 10/11, 64-bit · installs for your user only</p>
+          <p class="small">All versions and release notes are on the <a href="https://github.com/CODE-AXION/Miss-Minutes/releases">Releases page</a>.</p>
+        </div>
+        <div class="card req">
+          <h3>What you need</h3>
+          <ul class="checks">
+            <li>Windows 10 or 11 (64-bit)</li>
+            <li><a href="https://www.google.com/chrome/">Google Chrome</a>. The setup wizard checks for it and links to the download if it's missing.</li>
+            <li>A Google account that can use <a href="https://aistudio.google.com">Google AI Studio</a></li>
+            <li>That's it: Python, HandBrake and the recorder are built in.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="install" class="section">
+      <div class="wrap">
+        <h2>Install in a couple of minutes</h2>
+        <ol class="install">
+          <li><b>Run the installer.</b> It installs for your user only, with no admin rights needed.</li>
+          <li><b>If Windows shows "Windows protected your PC",</b> click <b>More info</b>, then <b>Run anyway</b>. The installer isn't code-signed yet, so SmartScreen doesn't recognise it.</li>
+          <li><b>Follow the setup wizard.</b> It checks Chrome, signs you in to Google, picks your library and recordings folders, and can start Miss Minutes with Windows.</li>
+          <li><b>Record a meeting.</b> Click <b>Record a meeting</b>, use the tray, or press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>. Notes appear a few minutes after you stop.</li>
+        </ol>
+        <div class="wizard">
+          <figure class="shot"><img src="images/setup-1-welcome.png" alt="Setup wizard, step 1: welcome" loading="lazy"><figcaption>Welcome</figcaption></figure>
+          <figure class="shot"><img src="images/setup-3-google.png" alt="Setup wizard: sign in to Google" loading="lazy"><figcaption>Sign in to Google</figcaption></figure>
+          <figure class="shot"><img src="images/setup-4-library.png" alt="Setup wizard: choose where the library goes" loading="lazy"><figcaption>Choose your library</figcaption></figure>
+          <figure class="shot"><img src="images/setup-8-done.png" alt="Setup wizard: done" loading="lazy"><figcaption>Done</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section alt">
+      <div class="wrap narrow">
+        <h2>Questions</h2>
+        <details>
+          <summary>Does it cost anything?</summary>
+          <p>The app is a free download. It writes notes through your own Google account in AI Studio, so whatever limits Google sets for your account apply.</p>
+        </details>
+        <details>
+          <summary>Where do my recordings and notes go?</summary>
+          <p>Notes live in your library, <code>Documents\Miss Minutes</code> by default: plain Markdown and JSON you can back up or open anywhere. Recordings stay in your recordings folder (your <code>Videos</code> folder by default). The only thing that leaves your PC is the compressed video, uploaded to your own Google AI Studio account.</p>
+        </details>
+        <details>
+          <summary>I already record with OBS. Can I keep using it?</summary>
+          <p>Yes. Point Miss Minutes at the folder OBS saves to, and every new recording is picked up. You can also drag any video onto the dashboard to process it first.</p>
+        </details>
+        <details>
+          <summary>Does smart search send my notes anywhere?</summary>
+          <p>No. Smart search is optional; when you turn it on it downloads a 207 MB model once and runs entirely on your PC. Keyword search works without it.</p>
+        </details>
+        <details>
+          <summary>Will muting in Miss Minutes mute me in Zoom or Teams?</summary>
+          <p>No, the two are separate. Muting in Miss Minutes only silences your mic in the recording; the screen and the call's audio keep recording. Use headphones so the other people aren't recorded twice.</p>
+        </details>
+        <details>
+          <summary>What happens if my Google session expires?</summary>
+          <p>The video goes back to the queue without using up an attempt, and you get a notification. Click it, sign in, and processing carries on by itself.</p>
+        </details>
+        <details>
+          <summary>How do I uninstall it?</summary>
+          <p>Start menu → <b>Uninstall Miss Minutes</b>. It asks whether to also delete your library and your settings; both default to <b>No</b>, so your notes are kept unless you say otherwise. Your original recordings are never deleted.</p>
+        </details>
+        <p class="small">More detail is in the <a href="https://github.com/CODE-AXION/Miss-Minutes#readme">full guide on GitHub</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand"><img src="images/icon.svg" alt="" width="24" height="24"><span>Miss Minutes</span></span>
+      <span><a href="https://github.com/CODE-AXION/Miss-Minutes">GitHub</a> · <a href="https://github.com/CODE-AXION/Miss-Minutes/releases">Releases</a> · <a href="https://github.com/CODE-AXION/Miss-Minutes/issues">Report a problem</a></span>
+    </div>
+  </footer>
+
+  <script>
+    // Point the download buttons straight at the newest installer; the static
+    // links to the Releases page stay as the fallback if the API is unavailable.
+    (async () => {
+      try {
+        const res = await fetch('https://api.github.com/repos/CODE-AXION/Miss-Minutes/releases/latest');
+        if (!res.ok) return;
+        const release = await res.json();
+        const exe = (release.assets || []).find((a) => /\.exe$/i.test(a.name));
+        if (!exe) return;
+        const version = release.tag_name.replace(/^v/, '');
+        const mb = Math.round(exe.size / 1024 / 1024);
+        const date = new Date(release.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        document.querySelectorAll('.js-download').forEach((a) => (a.href = exe.browser_download_url));
+        document.querySelector('.js-download-label').textContent = `Download Miss Minutes ${version}`;
+        document.querySelector('.js-release-meta').textContent = `Version ${version} · ${mb} MB · released ${date}`;
+        document.querySelector('.js-release-meta-2').textContent = `${exe.name} · ${mb} MB · Windows 10/11, 64-bit`;
+      } catch {
+        // Offline or rate-limited: keep the Releases page links.
+      }
+    })();
+  </script>
+</body>
+</html>
