@@ -108,6 +108,8 @@ export class AppTray {
   }
 
   update(): void {
+    // quitApp destroys the tray before the updater exits; a state change still queued then must not touch it.
+    if (this.tray.isDestroyed()) return
     const { worker } = this.state
     const attention = this.attention()
     const busy = worker.state === 'busy'

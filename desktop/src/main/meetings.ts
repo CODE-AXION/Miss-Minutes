@@ -42,6 +42,7 @@ export interface PromptWindow {
 export class MeetingWatcher {
   private timer: NodeJS.Timeout | null = null
   private polling = false
+  private disposed = false
   private tracker = new MeetingTracker()
 
   constructor(
@@ -61,7 +62,10 @@ export class MeetingWatcher {
   /** Polls only while the setting is on, setup is done and nothing is recording. */
   sync(): void {
     const wanted =
-      this.getSettings().meetingPrompt && !this.state.setupNeeded && !this.recording.busy
+      !this.disposed &&
+      this.getSettings().meetingPrompt &&
+      !this.state.setupNeeded &&
+      !this.recording.busy
     if (wanted && !this.timer) {
       this.timer = setInterval(() => void this.poll(), POLL_MS)
       this.log('meetings: watching for Google Meet')
@@ -72,7 +76,9 @@ export class MeetingWatcher {
     }
   }
 
+  /** On quit; a state change still queued afterwards must not start polling again. */
   dispose(): void {
+    this.disposed = true
     if (this.timer) clearInterval(this.timer)
     this.timer = null
     this.prompt.close()
