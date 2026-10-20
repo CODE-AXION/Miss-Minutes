@@ -37,6 +37,7 @@ export function defaultSettings(
     hbPreset: 'Fast 1080p30',
     hbQuality: 25,
     hbEncoder: '',
+    hbSpeed: 'background',
     model: 'gemini-3.8-flash',
     fallbackModel: '',
     thinkingLevel: 'low',
@@ -132,6 +133,7 @@ export function loadSettings(): Settings {
 
 const THEMES: string[] = ['system', 'office', 'crt']
 const THINKING: string[] = ['low', 'medium', 'high']
+const HB_SPEEDS: string[] = ['background', 'full']
 
 /**
  * Applies a renderer patch after a shallow type check against the defaults (unknown keys and wrong types are
@@ -154,6 +156,8 @@ export function saveSettings(patch: Partial<Settings>): Settings {
       throw new Error(`unknown theme: ${value}`)
     if (name === 'thinkingLevel' && !THINKING.includes(value as string))
       throw new Error(`unknown thinking level: ${value}`)
+    if (name === 'hbSpeed' && !HB_SPEEDS.includes(value as string))
+      throw new Error(`unknown compression speed: ${value}`)
     if (name === 'engine' && !ENGINES.includes(value as string))
       throw new Error(`unknown engine: ${value}`)
     if (name === 'chromeMode' && !CHROME_MODES.includes(value as string))
@@ -315,6 +319,7 @@ export function toArgs(s: Settings, sub: Subcommand, profileDir: string | null):
     opt('hb-preset', s.hbPreset),
     opt('hb-quality', s.hbQuality),
     ...optional('hb-encoder', s.hbEncoder),
+    opt('hb-speed', s.hbSpeed),
     opt('model', s.model),
     ...optional('fallback-model', s.fallbackModel),
     opt('thinking-level', s.thinkingLevel),

@@ -26,6 +26,8 @@ export type ThemeSetting = 'system' | 'office' | 'crt'
 export type EngineMode = 'bundled' | 'project'
 /** hidden = the automation Chrome runs on a hidden Windows desktop while processing; visible = shown, for troubleshooting. */
 export type ChromeMode = 'hidden' | 'visible'
+/** background = HandBrake at low priority in efficiency mode (lighter on the PC, slower); full = as fast as possible. */
+export type HbSpeed = 'background' | 'full'
 
 export interface Settings {
   engine: EngineMode
@@ -43,6 +45,7 @@ export interface Settings {
   hbPreset: string
   hbQuality: number
   hbEncoder: string
+  hbSpeed: HbSpeed
   model: string
   fallbackModel: string
   thinkingLevel: ThinkingLevel

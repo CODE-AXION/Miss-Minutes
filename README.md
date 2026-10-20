@@ -61,7 +61,7 @@ If something fails, Miss Minutes retries on its own, up to 3 attempts per record
 
 | File | What it is |
 |---|---|
-| [**Download `Miss-Minutes-Setup-1.4.1.exe`**](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.4.1.exe) | **The installer.** Run this to install or update Miss Minutes. All versions are on the [Releases](https://github.com/CODE-AXION/Miss-Minutes/releases) page. |
+| [**Download `Miss-Minutes-Setup-1.4.2.exe`**](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.4.2.exe) | **The installer.** Run this to install or update Miss Minutes. All versions are on the [Releases](https://github.com/CODE-AXION/Miss-Minutes/releases) page. |
 | `%LOCALAPPDATA%\Programs\Miss Minutes\Miss Minutes.exe` | The installed app (Start menu → **Miss Minutes**). |
 | `%LOCALAPPDATA%\Programs\Miss Minutes\Uninstall Miss Minutes.exe` | **The uninstaller** (Start menu → **Uninstall Miss Minutes**). See [Uninstall](#uninstall). |
 | `desktop/dist/win-unpacked/` | The same app, unpacked, without installing (for testing). Local build output only. |
@@ -82,7 +82,7 @@ You do **not** need Python, HandBrake, OBS or anything else: the installer inclu
 
 ## Install and first-run setup
 
-1. Run **`Miss-Minutes-Setup-1.4.1.exe`** ([download](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.4.1.exe)). It installs for your user only, with no admin rights needed. You can choose the folder.
+1. Run **`Miss-Minutes-Setup-1.4.2.exe`** ([download](https://github.com/CODE-AXION/Miss-Minutes/releases/latest/download/Miss-Minutes-Setup-1.4.2.exe)). It installs for your user only, with no admin rights needed. You can choose the folder.
 2. Miss Minutes starts and opens a short setup wizard.
 
 | | |
@@ -248,7 +248,7 @@ The live engine log, with search and tag filters. This is the first place to loo
 - **Recording:** the start/stop and mute shortcuts (**Change**, **Reset**, **Turn off**), and the floating toolbar on/off. It takes effect right away; a shortcut another app already uses is refused.
 
   ![Recording settings](docs/images/settings-recording.png)
-- **Compression:** HandBrake preset, encoder and quality. A higher RF gives smaller files.
+- **Compression:** HandBrake preset, encoder, quality and speed. A higher RF gives smaller files. Speed "In the background" (the default) runs HandBrake at low priority in Windows efficiency mode, so the PC stays usable while a recording compresses (about a third of the CPU and half the memory, a little slower); "Full speed" compresses as fast as possible.
 - **Google account:** see [below](#google-account).
 - **AI Studio:** the model, a fallback model, thinking level, language, retries and timeouts.
   - **Background context** (project names, usual attendees, domain terms) makes the notes noticeably more accurate.
@@ -328,7 +328,7 @@ This is `%APPDATA%\Miss Minutes`: settings, the automation browser profile, app 
 **A fresh retest, step by step:**
 1. Quit Miss Minutes from the tray.
 2. Start menu → **Uninstall Miss Minutes**. Answer **No** to the library and **Yes** to settings.
-3. Run `Miss-Minutes-Setup-1.4.1.exe` again. The wizard starts from scratch and offers your existing library.
+3. Run `Miss-Minutes-Setup-1.4.2.exe` again. The wizard starts from scratch and offers your existing library.
 
 **Silent uninstall** (scripts): `"%LOCALAPPDATA%\Programs\Miss Minutes\Uninstall Miss Minutes.exe" /S` asks nothing and keeps all data.
 

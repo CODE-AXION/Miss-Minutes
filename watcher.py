@@ -2,7 +2,8 @@
 
 Pipeline per new recording (one at a time):
     1. wait until the file stops growing and is no longer locked by the recorder
-    2. compress with HandBrakeCLI (Fast 1080p30, constant 30 fps, RF 25 - same as the GUI setup)
+    2. compress with HandBrakeCLI (Fast 1080p30, constant 30 fps, RF 25 - same as the GUI setup),
+       in the background by default: low priority, efficiency mode, veryfast (--hb-speed full to skip that)
     3. generate notes from the *compressed* video via Google AI Studio (meeting_notes.py)
     4. file the notes under library/notes/<category>/ and update library/index.json + INDEX.md
 
@@ -237,21 +238,63 @@ def find_handbrake(explicit: str | None) -> Path:
     raise RuntimeError("HandBrakeCLI.exe not found; pass --handbrake <path>")
 
 
+def handbrake_command(handbrake: Path, video: Path, partial: Path, args: argparse.Namespace) -> list[str]:
+    """HandBrakeCLI arguments. speed "full" is the plain GUI setup; "background" (default) also drops the
+    deinterlace filters (screen recordings are progressive) and, for x264, uses veryfast on half the threads:
+    measured on a 10-minute 1080p recording, ~1.45x the time for ~30% of the CPU, ~60% of the RAM, a smaller file."""
+    cmd = [str(handbrake), "-i", str(video), "-o", str(partial),
+           "-Z", args.hb_preset, "-q", str(args.hb_quality), "--cfr", "-O"]
+    if args.hb_encoder:
+        cmd += ["-e", args.hb_encoder]
+    if args.hb_speed == "background":
+        cmd += ["--no-comb-detect", "--no-decomb"]
+        if args.hb_encoder in (None, "", "x264"):  # hardware encoders take neither option
+            cmd += ["--encoder-preset", "veryfast", "-x", f"threads={max(2, (os.cpu_count() or 4) // 2)}"]
+    return cmd
+
+
+def run_in_background(pid: int) -> None:
+    """Windows efficiency mode (EcoQoS) for a started process: the scheduler prefers efficiency cores and low
+    clocks. Best effort: older Windows lacks it and the encode just runs at below-normal priority."""
+    if sys.platform != "win32":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    class PowerThrottling(ctypes.Structure):
+        _fields_ = [("Version", wintypes.ULONG), ("ControlMask", wintypes.ULONG), ("StateMask", wintypes.ULONG)]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    handle = kernel32.OpenProcess(0x0200 | 0x1000, False, pid)  # PROCESS_SET_INFORMATION | QUERY_LIMITED_INFORMATION
+    if not handle:
+        return
+    try:
+        state = PowerThrottling(1, 1, 1)  # version 1, EXECUTION_SPEED throttled
+        kernel32.SetProcessInformation(wintypes.HANDLE(handle), 4, ctypes.byref(state), ctypes.sizeof(state))  # ProcessPowerThrottling
+    finally:
+        kernel32.CloseHandle(wintypes.HANDLE(handle))
+
+
 def compress(video: Path, lib: Library, args: argparse.Namespace,
              on_progress: Callable[[float, str | None, float | None], None] | None = None) -> Path:
-    """Encode like the HandBrake GUI setup: Fast 1080p30 preset, constant framerate, RF 25."""
+    """Encode like the HandBrake GUI setup (Fast 1080p30 preset, constant framerate, RF 25), by default lighter
+    on the PC: see handbrake_command and run_in_background."""
     lib.compressed_dir.mkdir(parents=True, exist_ok=True)
     lib.logs_dir.mkdir(parents=True, exist_ok=True)
     out = lib.compressed_dir / f"{video.stem}.mp4"
     partial = out.with_name(f"{video.stem}.partial.mp4")
-    cmd = [str(find_handbrake(args.handbrake)), "-i", str(video), "-o", str(partial),
-           "-Z", args.hb_preset, "-q", str(args.hb_quality), "--cfr", "-O"]
-    if args.hb_encoder:
-        cmd += ["-e", args.hb_encoder]
-    log(f"[compress] {video.name} ({video.stat().st_size / 2**20:.0f} MB) -> RF {args.hb_quality}, constant framerate")
+    cmd = handbrake_command(find_handbrake(args.handbrake), video, partial, args)
+    background = args.hb_speed == "background"
+    log(f"[compress] {video.name} ({video.stat().st_size / 2**20:.0f} MB) -> RF {args.hb_quality}, constant framerate"
+        + (", in the background" if background else ", full speed"))
     started = time.monotonic()
     with open(lib.logs_dir / f"{video.stem}.handbrake.log", "w", encoding="utf-8", errors="replace") as hb_log:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=hb_log, text=True, errors="replace", bufsize=1)
+        flags = getattr(subprocess, "BELOW_NORMAL_PRIORITY_CLASS", 0) if background else 0
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=hb_log, text=True, errors="replace", bufsize=1,
+                                creationflags=flags)
+        if background:
+            run_in_background(proc.pid)
         try:
             next_report = 10.0
             last_pct, last_sent = 0.0, 0.0
@@ -309,7 +352,7 @@ def process(video: Path, lib: Library, args: argparse.Namespace,
             lib.update(key, status="compressing")
             source_size = video.stat().st_size
             record(lib, key, "compress_start", attempts, size_mb=round(source_size / 2**20),
-                   quality=args.hb_quality, encoder=args.hb_encoder)
+                   quality=args.hb_quality, encoder=args.hb_encoder, speed=args.hb_speed)
             started = time.monotonic()
             compressed = compress(video, lib, args, on_progress)
             lib.update(key, status="compressed", compressed=str(compressed), compressed_size=compressed.stat().st_size)
@@ -1084,6 +1127,9 @@ def add_watch_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--hb-preset", default="Fast 1080p30", help='HandBrake base preset (default: "Fast 1080p30")')
     parser.add_argument("--hb-quality", type=float, default=25, help="Constant quality RF; higher = smaller (default: 25)")
     parser.add_argument("--hb-encoder", help="Override the video encoder, e.g. qsv_h264 for Intel Quick Sync (faster)")
+    parser.add_argument("--hb-speed", choices=["background", "full"], default="background",
+                        help="background = low priority and efficiency mode, lighter on the PC but slower; "
+                             "full = as fast as possible (default: background)")
     mn.add_generation_args(parser)
 
 

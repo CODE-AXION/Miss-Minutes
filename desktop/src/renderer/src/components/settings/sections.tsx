@@ -1,5 +1,5 @@
 import { useState, type JSX } from 'react'
-import type { EngineMode, Settings, ThemeSetting, ThinkingLevel } from '@shared/api'
+import type { EngineMode, HbSpeed, Settings, ThemeSetting, ThinkingLevel } from '@shared/api'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import {
@@ -160,6 +160,23 @@ export function CompressionSection(p: SectionProps): JSX.Element {
         )}
         <FieldDescription>
           Override the video encoder, e.g. qsv_h264 for Intel Quick Sync (faster)
+        </FieldDescription>
+      </Field>
+      <Field className="md:col-span-2">
+        <FieldLabel htmlFor="hbSpeed">Speed</FieldLabel>
+        <Select value={p.draft.hbSpeed} onValueChange={(v) => p.set('hbSpeed', v as HbSpeed)}>
+          <SelectTrigger id="hbSpeed" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="background">In the background (lighter on the PC)</SelectItem>
+            <SelectItem value="full">Full speed</SelectItem>
+          </SelectContent>
+        </Select>
+        <FieldDescription>
+          In the background, HandBrake runs at low priority in efficiency mode and uses about a
+          third of the CPU and half the memory, so the PC stays usable; a one-hour meeting takes
+          about 14 minutes instead of 10.
         </FieldDescription>
       </Field>
       <div className="flex flex-col gap-3 md:col-span-2">
