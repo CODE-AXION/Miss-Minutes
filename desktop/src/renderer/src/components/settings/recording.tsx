@@ -140,6 +140,19 @@ export function RecordingSettings({ state }: { state: AppState }): JSX.Element {
     }
   }
 
+  const [savingMeetingPrompt, setSavingMeetingPrompt] = useState(false)
+
+  async function setMeetingPrompt(meetingPrompt: boolean): Promise<void> {
+    setSavingMeetingPrompt(true)
+    try {
+      await window.api.saveSettings({ meetingPrompt }, { restart: 'after-current' })
+    } catch (e) {
+      toast.error(errorMessage(e))
+    } finally {
+      setSavingMeetingPrompt(false)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -171,6 +184,14 @@ export function RecordingSettings({ state }: { state: AppState }): JSX.Element {
             checked={settings.recordingToolbar}
             disabled={savingToolbar}
             onChange={(on) => void setToolbar(on)}
+          />
+          <SwitchSetting
+            id="meetingPrompt"
+            label="Offer to record Google Meet calls"
+            description="When a Google Meet room is open in your browser, a small prompt shows which screen and audio would be recorded. Nothing records until you click Record. Meet must be the visible tab."
+            checked={settings.meetingPrompt}
+            disabled={savingMeetingPrompt}
+            onChange={(on) => void setMeetingPrompt(on)}
           />
         </FieldGroup>
       </CardContent>

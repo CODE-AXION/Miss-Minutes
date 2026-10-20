@@ -58,7 +58,9 @@ export function defaultSettings(
     // App-only too; Ctrl+Shift+R would steal the browsers' hard refresh (RC·T19).
     recordHotkey: DEFAULT_RECORD_HOTKEY,
     muteHotkey: DEFAULT_MUTE_HOTKEY,
-    recordingToolbar: true
+    recordingToolbar: true,
+    // App-only as well: the Meet prompt (MD·T7) never restarts the worker.
+    meetingPrompt: true
   }
 }
 

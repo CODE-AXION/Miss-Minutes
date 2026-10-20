@@ -8,6 +8,8 @@ import { registerIpc } from './ipc'
 import { handleMedia, registerMediaScheme } from './media'
 import { Notifier } from './notify'
 import { RecordingService } from './recording'
+import { MeetingPrompt } from './meeting-prompt'
+import { MeetingWatcher } from './meetings'
 import { RecordingToolbar } from './toolbar'
 import { Updater } from './updates'
 import {
@@ -49,6 +51,7 @@ let tray: AppTray | null = null
 let notifier: Notifier | null = null
 let recording: RecordingService | null = null
 let toolbar: RecordingToolbar | null = null
+let meetings: MeetingWatcher | null = null
 let updater: Updater | null = null
 let isQuitting = false
 /** The state changed while the window was hidden: send it on the next show. */
@@ -234,6 +237,7 @@ async function updateSettings(patch: Partial<Settings>, restart: RestartMode): P
   }
   state.setSettings(next)
   if (next.muteHotkey !== before.muteHotkey) recording?.syncMuteHotkey()
+  if (next.meetingPrompt !== before.meetingPrompt) meetings?.sync()
   log.setLogsDir(join(next.library, 'logs'))
   if (next.theme !== before.theme) applyTheme(next)
   if (next.openAtLogin !== before.openAtLogin || next.startHidden !== before.startHidden)
@@ -299,6 +303,7 @@ async function quitApp({ confirm = true, relaunch = false } = {}): Promise<void>
   // Closed and renamed before the app exits; queued by the worker's first scan next time.
   await recording?.stop('quit')
   toolbar?.close()
+  meetings?.dispose()
   await Promise.all([
     supervisor.shutdownForQuit(),
     search.dispose().catch((error: Error) => log.add('app', `search: ${error.message}`))
@@ -375,6 +380,16 @@ app.whenReady().then(() => {
     recording,
     () => state.settings,
     () => mainWindow
+  )
+  // Offers to record a Google Meet room (MD·T9); "Never for Meet" saves like the Settings page does.
+  meetings = new MeetingWatcher(
+    state,
+    recording,
+    new MeetingPrompt(),
+    notifier,
+    (text) => log.add('app', text),
+    () => state.settings,
+    (patch) => updateSettings(patch, 'after-current')
   )
 
   state.on('change', () => {

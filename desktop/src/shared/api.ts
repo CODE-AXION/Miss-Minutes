@@ -69,6 +69,8 @@ export interface Settings {
   muteHotkey: string
   /** The floating always-on-top REC pill while recording, hidden from the capture (RC·T29). */
   recordingToolbar: boolean
+  /** Offer to record when a Google Meet room is open (MD·T7). */
+  meetingPrompt: boolean
 }
 
 /** after-current = restart the worker once the current video is finished; now = kill and requeue it. */

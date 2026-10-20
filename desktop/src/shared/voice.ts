@@ -80,6 +80,14 @@ const LINES = {
     plain: 'A recording is in progress. Stop, save and quit?',
     flavoured: "We're still recording, sugar. Stop, save and quit?"
   },
+  'meeting.prompt': {
+    plain: '{app} started ({code})',
+    flavoured: '{app} is starting ({code}), hon. Want me to record it?'
+  },
+  'meeting.startFailed': {
+    plain: 'Could not start recording: {error}',
+    flavoured: "Couldn't start that recording, sugar: {error}"
+  },
   'update.ready': {
     plain: 'Miss Minutes {version} is ready. Restart to update.',
     flavoured: 'A fresh version ({version}) is ready, sugar. Restart and I will be all set.'

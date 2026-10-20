@@ -28,7 +28,9 @@ export default defineConfig({
           index: 'src/preload/index.ts',
           recorder: 'src/preload/recorder.ts',
           // The recording mini-toolbar (RC·T29), sandboxed like the recorder.
-          toolbar: 'src/preload/toolbar.ts'
+          toolbar: 'src/preload/toolbar.ts',
+          // The meeting prompt (MD·T14), sandboxed like the toolbar.
+          prompt: 'src/preload/prompt.ts'
         }
       }
     }
@@ -48,7 +50,9 @@ export default defineConfig({
         input: {
           index: resolve('src/renderer/index.html'),
           recorder: resolve('src/renderer/recorder.html'),
-          toolbar: resolve('src/renderer/toolbar.html')
+          toolbar: resolve('src/renderer/toolbar.html'),
+          // The meeting prompt card (MD·T14), React-free like the toolbar.
+          prompt: resolve('src/renderer/prompt.html')
         }
       }
     }

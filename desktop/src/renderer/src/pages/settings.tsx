@@ -50,7 +50,9 @@ export function SettingsPage(): JSX.Element | null {
           smartSearch: saved.smartSearch,
           recordHotkey: saved.recordHotkey,
           muteHotkey: saved.muteHotkey,
-          recordingToolbar: saved.recordingToolbar
+          recordingToolbar: saved.recordingToolbar,
+          // Also turned off from the Meet prompt (MD·T15).
+          meetingPrompt: saved.meetingPrompt
         }
       : saved
 

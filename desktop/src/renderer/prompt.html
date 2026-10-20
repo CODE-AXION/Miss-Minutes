@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Record this meeting?</title>
+    <!-- The meeting prompt (MD·T12): only the screen preview (a data URL) on top of the pill's policy. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src data:"
+    />
+  </head>
+
+  <body>
+    <div class="card">
+      <div class="title" id="title"></div>
+      <div class="body">
+        <img id="thumb" class="thumb" alt="" />
+        <div class="what">
+          <div class="muted">Will record:</div>
+          <div class="label" id="screen"></div>
+          <div class="audio" id="audio"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" id="record" class="btn primary">
+          <span class="dot"></span>Record
+        </button>
+        <button type="button" id="dismiss" class="btn">Not now</button>
+        <button type="button" id="never" class="btn link">Never for Meet</button>
+      </div>
+      <div class="countdown"><div class="bar" id="bar"></div></div>
+    </div>
+    <script type="module" src="/src/prompt/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,172 @@
+/* The meeting prompt (MD·T12). Transparent, frameless window; only the card is painted. Same type and record red as
+   the REC pill (toolbar.css). Not draggable: it sits at the top-right of the Meet window's screen. */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font:
+    400 12px/1.35 'Segoe UI',
+    system-ui,
+    sans-serif;
+  user-select: none;
+}
+
+body {
+  box-sizing: border-box;
+  padding: 10px;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 12px 12px 14px;
+  border-radius: 12px;
+  background: #1f1f23;
+  color: #f2f2f2;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.4),
+    inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.title {
+  font-weight: 600;
+  font-size: 13px;
+  /* The flavoured line (voice.ts meeting.prompt) needs two lines. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.body {
+  display: flex;
+  gap: 10px;
+  min-height: 0;
+}
+
+.thumb {
+  flex: none;
+  width: 160px;
+  height: 90px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.15);
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.muted {
+  color: #a0a0a8;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.audio {
+  color: #d6d6dc;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn.primary {
+  border-color: #d0281b;
+  background: #d0281b;
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #b82216;
+}
+
+.btn.link {
+  margin-left: auto;
+  padding: 0 4px;
+  border-color: transparent;
+  color: #a0a0a8;
+  font-weight: 400;
+}
+
+.btn.link:hover {
+  background: transparent;
+  color: #f2f2f2;
+  text-decoration: underline;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.countdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.bar {
+  height: 100%;
+  width: 100%;
+  background: #d0281b;
+  transform-origin: left;
+}
+
+/* Duration set from expiresAt by main.ts. */
+.bar.run {
+  animation: drain linear forwards;
+}
+
+@keyframes drain {
+  to {
+    transform: scaleX(0);
+  }
+}
