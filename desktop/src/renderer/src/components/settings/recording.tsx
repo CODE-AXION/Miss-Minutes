@@ -180,7 +180,7 @@ export function RecordingSettings({ state }: { state: AppState }): JSX.Element {
           <SwitchSetting
             id="recordingToolbar"
             label="Floating toolbar while recording"
-            description="A small REC pill with Mute and Stop that stays on top of your meeting app. Drag it anywhere; it is not in the recording itself."
+            description="A small REC pill with Mute and Stop that stays on top of your meeting app. Drag it anywhere. It shows in the recording and in screen shares."
             checked={settings.recordingToolbar}
             disabled={savingToolbar}
             onChange={(on) => void setToolbar(on)}

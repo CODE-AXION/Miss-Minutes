@@ -1,6 +1,6 @@
 {
   "name": "miss-minutes",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Miss Minutes - desktop app for the meeting-notes pipeline",
   "main": "./out/main/index.js",
   "author": "Aadil",

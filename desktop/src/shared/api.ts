@@ -70,7 +70,7 @@ export interface Settings {
   recordHotkey: string
   /** Mute/unmute the mic while recording; only taken while a recording with a mic runs; '' = off (RC·T27). */
   muteHotkey: string
-  /** The floating always-on-top REC pill while recording, hidden from the capture (RC·T29). */
+  /** The floating always-on-top REC pill while recording (RC·T29); it shows in captures. */
   recordingToolbar: boolean
   /** Offer to record when a Google Meet room is open (MD·T7). */
   meetingPrompt: boolean

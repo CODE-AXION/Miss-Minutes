@@ -70,9 +70,9 @@ export class MeetingPrompt implements PromptWindow {
         nodeIntegration: false
       }
     })
-    // Above full-screen apps and the taskbar, and left out of every screen capture, ours included.
+    // Above full-screen apps and the taskbar. No setContentProtection: it makes Chrome's screen share start 5–8 s late
+    // (see toolbar.ts), and this prompt opens just as a meeting, and so a share, begins.
     win.setAlwaysOnTop(true, 'screen-saver')
-    win.setContentProtection(true)
     win.once('ready-to-show', () => {
       if (this.win === win) win.showInactive()
     })

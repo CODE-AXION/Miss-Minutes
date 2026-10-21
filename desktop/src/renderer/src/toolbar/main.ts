@@ -3,8 +3,7 @@ import { formatClock } from '@shared/timestamps'
 import './toolbar.css'
 
 /**
- * The floating REC pill (RC·T29): elapsed time, mic mute and Stop, always on top while recording and hidden from the
- * capture by main. React-free: one label and two buttons. The clock ticks here, so main sends only real changes.
+ * The floating REC pill (RC·T29): elapsed time, mic mute and Stop, always on top while recording. React-free: one label and two buttons. The clock ticks here, so main sends only real changes.
  */
 
 const bridge = window.recToolbar

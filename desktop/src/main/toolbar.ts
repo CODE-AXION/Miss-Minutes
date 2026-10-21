@@ -121,9 +121,9 @@ export class RecordingToolbar {
         nodeIntegration: false
       }
     })
-    // Above full-screen apps and the taskbar, and left out of every screen capture, ours included.
+    // Above full-screen apps and the taskbar. No setContentProtection: while a capture-excluded window is on screen,
+    // Chrome takes 5–8 s to start a screen share (Meet's Present), so the pill shows in captures, ours included.
     win.setAlwaysOnTop(true, 'screen-saver')
-    win.setContentProtection(true)
     win.once('ready-to-show', () => {
       this.ready = true
       this.applyVisibility()
